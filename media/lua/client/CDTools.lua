@@ -1,5 +1,8 @@
 CDTools = {}
 
+--- Declaring functions like this allows them to be accessed like CDTools.func
+--- It kind of mimics static methods, and method forms in other languages
+--- I might ditch this to have more homogeneous code, though.
 local function ShallowCopy(t)
     local t2 = {};
     for k,v in pairs(t) do
@@ -9,7 +12,6 @@ local function ShallowCopy(t)
 end
 CDTools.ShallowCopy = ShallowCopy;
 
--- TODO: Replace with print?
 local function CDDebug(f_Msg)
 	local fileWriterObj = getFileWriter("CDDebug.log", true, true);
 	fileWriterObj:write("" .. tostring(f_Msg) .."\r\n");

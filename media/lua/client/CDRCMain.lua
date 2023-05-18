@@ -1,6 +1,7 @@
 require "OptionScreens/CharacterCreationProfession"
 require "CDTools"
 require "CDCharRandomizer"
+require "CDCharRandomizerSettings"
 
 -- TODO: UI for choosing traits in the character creation menu.
 function CharacterCreationProfession:randomizeTraits()
@@ -89,5 +90,50 @@ function CharacterCreationProfession:CDAddTrait(trait)
         self:onOptionMouseDown(self.addTraitBtn);
     else
         CDTools.CDDebug("Tried to add a trait with value of 0. I don't know how to!");
+    end
+end
+
+local ccp_create_base = CharacterCreationProfession.create;
+function CharacterCreationProfession:create()
+    ccp_create_base(self);
+
+    local button_text = "RANDOM SETTINGS";
+    local textWid = getTextManager():MeasureStringX(UIFont.Small, button_text);
+	local randomSettingsButtonWid = math.max(100, textWid + 8 * 2);
+    self.randomSettingsButton = ISButton:new(self.resetButton:getX() - 10 - randomSettingsButtonWid, self.resetButton:getY(), randomSettingsButtonWid, self.resetButton.height, button_text, self, CharacterCreationProfession.OpenRandomizerSettings);
+    self.randomSettingsButton:initialise();
+    self.randomSettingsButton:instantiate();
+    self.randomSettingsButton:setAnchorLeft(false);
+    self.randomSettingsButton:setAnchorRight(true);
+    self.randomSettingsButton:setAnchorTop(false);
+    self.randomSettingsButton:setAnchorBottom(true);
+    self.randomSettingsButton.borderColor = { r = 1, g = 1, b = 1, a = 0.1 };
+    self.mainPanel:addChild(self.randomSettingsButton);
+end
+
+function CharacterCreationProfession:OpenRandomizerSettings()
+    local joypadData = JoypadState.getMainMenuJoypad() or CoopCharacterCreation.getJoypad();
+    MainScreen.instance.charCreationProfession:setVisible(false);
+    CDCharRandomizerSettings:setVisible(true, joypadData);
+end
+
+
+local main_screen_instantiate_base = MainScreen.instantiate;
+function MainScreen:instantiate()
+    main_screen_instantiate_base(self);
+
+    if not self.inGame and not isDemo() then
+        CDCharRandomizerSettings = CDCharRandomizerSettings:new(0, 0, self.width, self.height);
+        CDCharRandomizerSettings:initialise();
+        CDCharRandomizerSettings:setVisible(false);
+        CDCharRandomizerSettings:setAnchorRight(true);
+        CDCharRandomizerSettings:setAnchorLeft(true);
+        CDCharRandomizerSettings:setAnchorBottom(true);
+        CDCharRandomizerSettings:setAnchorTop(true);
+        CDCharRandomizerSettings.backgroundColor = {r=0, g=0, b=0, a=0.0};
+        CDCharRandomizerSettings.borderColor = {r=1, g=1, b=1, a=0.0};
+
+        self:addChild(CDCharRandomizerSettings);
+        CDCharRandomizerSettings:create();
     end
 end
