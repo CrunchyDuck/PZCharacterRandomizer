@@ -76,10 +76,10 @@ function CharacterCreationProfession:randomizeTraits()
     -- (try to) Pick the required traits.
     --- Report trait conflicts.
     -- Pick the required categories
-    -- Add new traits until a threshold is reached
-    --- no more traits 
+    -- Add new traits until a threshold is reached:
+    --- no more traits
     --- max number of traits (positive or negative)
-    --- max number of points
+    --- max number of points (absolute)
     self:resetBuild();
 
     -- TODO: Required profession.
@@ -110,7 +110,7 @@ function CharacterCreationProfession:randomizeTraits()
     --- Shuffle table. This will be our source of randomness.
     --- We will search through the table, from the first to the last element,
     ---   till a valid trait matches. Then we remove that item from table and use it.
-    FisherYatesShuffle(trait_table_ar);
+    CDTools.FisherYatesShuffle(trait_table_ar);
     
     local low_value_cutoff = 4;
     -- Not sure if there's a random range function in zomboid 
@@ -133,7 +133,7 @@ function CharacterCreationProfession:randomizeTraits()
     end
 
     if core_current < core_num then
-        CDDebug("Could not get core traits.");
+        CDTools.CDDebug("Could not get core traits.");
     end
     
 end
@@ -141,7 +141,7 @@ end
 function CharacterCreationProfession:CDAddTrait(trait)
     -- Add negative
     if trait.item:getCost() < 0 then
-        local i = TableContains(self.listboxBadTrait.items, trait);
+        local i = CDTools.TableContains(self.listboxBadTrait.items, trait);
         if i == -1 then
             -- TODO: Figure out exception/debugging for this.
             return
@@ -150,7 +150,7 @@ function CharacterCreationProfession:CDAddTrait(trait)
         self:onOptionMouseDown(self.addBadTraitBtn);
     -- Add positive
     elseif trait.item:getCost() > 0 then
-        local i = TableContains(self.listboxTrait.items, trait);
+        local i = CDTools.TableContains(self.listboxTrait.items, trait);
         if i == -1 then
             -- TODO: Figure out exception/debugging for this.
             return
@@ -158,6 +158,6 @@ function CharacterCreationProfession:CDAddTrait(trait)
         self.listboxTrait.selected = i;
         self:onOptionMouseDown(self.addTraitBtn);
     else
-        CDDebug("Tried to add a trait with value of 0. I don't know how to!");
+        CDTools.CDDebug("Tried to add a trait with value of 0. I don't know how to!");
     end
 end

@@ -1,27 +1,33 @@
-function ShallowCopy(t)
+CDTools = {}
+
+local function ShallowCopy(t)
     local t2 = {};
     for k,v in pairs(t) do
         t2[k] = v;
     end
     return t2;
 end
+CDTools.ShallowCopy = ShallowCopy;
 
-function CDDebug(f_Msg)
+-- TODO: Replace with print?
+local function CDDebug(f_Msg)
 	local fileWriterObj = getFileWriter("CDDebug.log", true, true);
 	fileWriterObj:write("" .. tostring(f_Msg) .."\r\n");
 	fileWriterObj:close();
 end
+CDTools.CDDebug = CDDebug;
 
 -- Taken from: https://www.programming-idioms.org/idiom/10/shuffle-a-list/2019/lua
-function FisherYatesShuffle(x)
+local function FisherYatesShuffle(x)
     for i = #x, 2, -1 do
         local j = ZombRand(i);
         x[i], x[j] = x[j], x[i];
     end
 end
+CDTools.FisherYatesShuffle = FisherYatesShuffle;
 
 -- I don't have internet right so, so I can't check if java has a Contains method or something.
-function JavaArrayContains(array, item)
+local function JavaArrayContains(array, item)
     for i = 1, #array do
         if array[i].item == item then
             return i;
@@ -29,8 +35,9 @@ function JavaArrayContains(array, item)
     end
     return -1;
 end
+CDTools.JavaArrayContains = JavaArrayContains;
 
-function TableContains(table, item)
+local function TableContains(table, item)
     for index, value in pairs(table) do
         if value == item then
             return index;
@@ -38,3 +45,4 @@ function TableContains(table, item)
     end
     return -1;
 end
+CDTools.TableContains = TableContains;
