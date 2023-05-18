@@ -116,7 +116,8 @@ function CharacterCreationProfession:randomizeTraits()
     -- Not sure if there's a random range function in zomboid 
     local core_min = 2;
     local core_max = 5;
-    local core_num = ZombRand(core_max - core_min) + core_min;
+    local core_range = core_max - core_min;
+    local core_num = ZombRand(core_range + 1) + core_min;
 
     -- Get core traits
     local core_current = 0
