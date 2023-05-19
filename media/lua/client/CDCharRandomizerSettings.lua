@@ -16,7 +16,6 @@
 --- It's truly impressive, the dedication shown by The Indie Stone
 ---   to make codebase mirror the rotting dead carcasses their game is focused on.
 
--- TODO: Add "null" profession.
 require"ISUI/ISPanel"
 require"ISUI/ISButton"
 require"ISUI/ISInventoryPane"
@@ -429,28 +428,6 @@ function CDCharRandomizerSettings:new(x, y, width, height)
 	return o
 end
 
-function CharacterCreationMain.sortByCost(a, b)
-    if a.item:getCost() == b.item:getCost() then
-        return not string.sort(a.text, b.text)
-    end
-    return a.item:getCost() < b.item:getCost();
-end
-
-function CharacterCreationMain.sortByInvertCost(a, b)
-    if a.item:getCost() == b.item:getCost() then
-        return not string.sort(a.text, b.text)
-    end
-    return a.item:getCost() > b.item:getCost();
-end
-
-function CharacterCreationMain.sort(list)
-    table.sort(list, CharacterCreationMain.sortByCost);
-end
-
-function CharacterCreationMain.invertSort(list)
-    table.sort(list, CharacterCreationMain.sortByInvertCost);
-end
-
 function CDCharRandomizerSettings:setVisible(visible, joypadData)
 	ISPanelJoypad.setVisible(self, visible, joypadData);
     if visible then
@@ -678,32 +655,6 @@ function CDCharRandomizerSettings:addTrait(from_listbox, to_listbox)
     -- self.addBannedBadTraitBtn:setEnable(false);
 end
 
--- function CDCharRandomizerSettings:mutualyExclusive(trait, bAdd)
--- 	for i = 0, trait:getMutuallyExclusiveTraits():size() - 1 do
--- 		local exclusiveTrait = trait:getMutuallyExclusiveTraits():get(i);
---         exclusiveTrait = TraitFactory.getTrait(exclusiveTrait);
--- 		if exclusiveTrait:isFree() then
--- 			-- nothing
--- 		elseif not bAdd then
--- 			-- remove from our available traits list the exclusive ones
---             if exclusiveTrait:getCost() > 0 then
---                 self.listboxTrait:removeItem(exclusiveTrait:getLabel());
---             else
---                 self.listboxBadTrait:removeItem(exclusiveTrait:getLabel());
---             end
--- 		elseif not self:isTraitExcluded(exclusiveTrait) then
--- 			-- add the previously removed exclusive trait to the available ones
---             local newItem = {};
---             if exclusiveTrait:getCost() > 0 then
--- 			    newItem = self.listboxTrait:addItem(exclusiveTrait:getLabel(), exclusiveTrait);
---             else
---                 newItem = self.listboxBadTrait:addItem(exclusiveTrait:getLabel(), exclusiveTrait);
---             end
--- 			newItem.tooltip = exclusiveTrait:getDescription();
--- 		end
--- 	end
--- end
-
 function CDCharRandomizerSettings:isTraitExcluded(trait)
 	for i=1,self.listboxRequiredTraits:size() do
 		local selectedTrait = self.listboxRequiredTraits.items[i].item
@@ -742,19 +693,6 @@ function CDCharRandomizerSettings:removeTrait(target_listbox)
         -- self.addBannedBadTraitBtn:setEnable(false);
 	end
 end
-
--- function CDCharRandomizerSettings:drawAvatar()
--- 	if MainScreen.instance.avatar == nil then
--- 		return;
--- 	end
-
--- 	local x = self:getAbsoluteX();
--- 	local y = self:getAbsoluteY();
--- 	x = x + 96 / 2;
--- 	y = y + 165;
-
--- 	MainScreen.instance.avatar:drawAt(x, y);
--- end
 
 function CDCharRandomizerSettings:update()
 	ISPanelJoypad.update(self)
@@ -845,15 +783,6 @@ end
 
 function CDCharRandomizerSettings:render()
 	local w = (self.mainPanel:getWidth() / 3);
-
-	-- point to spend text
---	self:drawRect(self.mainPanel:getX() + 64, self.mainPanel:getY() + 161, self.mainPanel:getWidth() - 64 - 40, 1, 1, 0.3, 0.3, 0.3);
-	-- local pointsY = self.mainPanel:getY() + self.backButton:getY() - 5 - self.mediumFontHgt
-	-- pointsY = pointsY - (self.tooltipRichText.height - FONT_HGT_MEDIUM) / 2
-	-- local pointsWid = getTextManager():MeasureStringX(UIFont.Medium, tostring(self:PointToSpend()))
-	-- self:drawTextRight(getText("UI_characreation_pointToSpend"), self.mainPanel:getX() + self.mainPanel:getWidth() - pointsWid - 16 - 8, pointsY, 1, 1, 1, 1, UIFont.Medium);
-	-- local pointString = self:PointToSpend() .. "";
-	-- title over each table
 
 	self:drawText("Required Occupation", self.mainPanel:getX() + 16, self.listboxProf:getAbsoluteY() - self.mediumFontHgt - 8, 1, 1, 1, 1, UIFont.Medium);
 	self:drawText("Randomized Traits", self.listboxTrait:getAbsoluteX(), self.listboxProf:getAbsoluteY() - self.mediumFontHgt - 8, 1, 1, 1, 1, UIFont.Medium);
@@ -1064,82 +993,4 @@ function CDCharRandomizerSettings:onResolutionChange(oldw, oldh, neww, newh)
 
 --	MainScreen.instance.charCreationHeader:setX(self.mainPanel:getX());
 --	MainScreen.instance.charCreationHeader:setY(self.mainPanel:getY());
-end
-
-BCRC = {};
-BCRC.savefile = "saved_builds.txt";
-
-function BCRC.inputModal(_centered, _width, _height, _posX, _posY, _text, _onclick, target, param1, param2) -- {{{
-    -- based on luautils.okModal
-    local posX = _posX or 0;
-    local posY = _posY or 0;
-    local width = _width or 230;
-    local height = _height or 120;
-    local centered = _centered;
-    local txt = _text;
-    local core = getCore();
-
-    -- center the modal if necessary
-    if centered then
-        posX = core:getScreenWidth() * 0.5 - width * 0.5;
-        posY = core:getScreenHeight() * 0.5 - height * 0.5;
-    end
-
-    -- ISModalDialog:new(x, y, width, height, text, yesno, target, onclick, player, param1, param2)
-    local modal = ISTextBox:new(posX, posY, width, height, getText("UI_characreation_BuildSavePrompt"), _text or "", target, _onclick, param1, param2);
-    modal:initialise();
-    modal:setAlwaysOnTop(true)
-    modal:setCapture(true)
-    modal:addToUIManager();
-    modal.yes:setTitle(getText("UI_btn_save"))
-    modal.entry:focus()
-
-    return modal;
-end
--- }}}
-function BCRC.readSaveFile() -- {{{
-    local retVal = {};
-
-    local saveFile = getFileReader(BCRC.savefile, true);
-    local line = saveFile:readLine();
-    while line ~= nil do
-        local s = luautils.split(line, ":");
-        retVal[s[1]] = s[2];
-        line = saveFile:readLine();
-    end
-    saveFile:close();
-
-    return retVal;
-end
--- }}}
-function BCRC.writeSaveFile(options) -- {{{
-    local saved_builds = getFileWriter(BCRC.savefile, true, false); -- overwrite
-    for key,val in pairs(options) do
-        saved_builds:write(key..":"..val.."\n");
-    end
-    saved_builds:close();
-end
--- }}}
-BCRC.dump = function(o, lvl) -- {{{ Small function to dump an object.
-    if lvl == nil then lvl = 5 end
-    if lvl < 0 then return "SO ("..tostring(o)..")" end
-
-    if type(o) == 'table' then
-        local s = '{ '
-        for k,v in pairs(o) do
-            if k == "prev" or k == "next" then
-                s = s .. '['..k..'] = '..tostring(v);
-            else
-                if type(k) ~= 'number' then k = '"'..k..'"' end
-                s = s .. '['..k..'] = ' .. BCRC.dump(v, lvl - 1) .. ',\n'
-            end
-        end
-        return s .. '}\n'
-    else
-        return tostring(o)
-    end
-end
--- }}}
-BCRC.pline = function (text) -- {{{ Print text to logfile
-    print(tostring(text));
 end
