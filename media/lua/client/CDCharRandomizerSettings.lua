@@ -743,18 +743,18 @@ function CDCharRandomizerSettings:removeTrait(target_listbox)
 	end
 end
 
-function CDCharRandomizerSettings:drawAvatar()
-	if MainScreen.instance.avatar == nil then
-		return;
-	end
+-- function CDCharRandomizerSettings:drawAvatar()
+-- 	if MainScreen.instance.avatar == nil then
+-- 		return;
+-- 	end
 
-	local x = self:getAbsoluteX();
-	local y = self:getAbsoluteY();
-	x = x + 96 / 2;
-	y = y + 165;
+-- 	local x = self:getAbsoluteX();
+-- 	local y = self:getAbsoluteY();
+-- 	x = x + 96 / 2;
+-- 	y = y + 165;
 
-	MainScreen.instance.avatar:drawAt(x, y);
-end
+-- 	MainScreen.instance.avatar:drawAt(x, y);
+-- end
 
 function CDCharRandomizerSettings:update()
 	ISPanelJoypad.update(self)
@@ -1010,52 +1010,6 @@ function CDCharRandomizerSettings:drawProfessionMap(y, item, alt)
 	return y;
 end
 
-function CDCharRandomizerSettings.initWorld()
-	if isDemo() then
-		return
-	end
-	if getCore():getGameMode() == "Tutorial" then
-		return
-	end
-	if MainScreen.instance == nil then
-		return
-	end
-
-	getWorld():setLuaPlayerDesc(MainScreen.instance.desc);
-	getWorld():getLuaTraits():clear()
-	for i, v in pairs(CDCharRandomizerSettings.instance.listboxRequiredTraits.items) do
-		getWorld():addLuaTrait(v.item:getType());
-	end
-
-	local spawnRegion = MapSpawnSelect.instance.selectedRegion
-	if not spawnRegion then
-		-- possible to skip MapSpawnSelect by going from LoadGameScreen to CharacterCreationMain
-		-- i.e., double-clicking an existing savefile with a dead character
-		spawnRegion = MapSpawnSelect.instance:useDefaultSpawnRegion()
-	end
-	if not spawnRegion then
-		error "no spawn region was chosen, don't know where to spawn the player"
-		return
-	end
-	print('using spawn region '..tostring(spawnRegion.name))
-	-- we generate the spawn point for the profession choose
-	local spawn = spawnRegion.points[MainScreen.instance.desc:getProfession()];
-	if not spawn then
-		spawn = spawnRegion.points["unemployed"];
-	end
-	if not spawn then
-		error "there is no spawn point table for the player's profession, don't know where to spawn the player"
-		return
-	end
-	print(#spawn..' possible spawn points')
-	local randSpawnPoint = spawn[(ZombRand(#spawn) + 1)];
-	getWorld():setLuaSpawnCellX(randSpawnPoint.worldX);
-	getWorld():setLuaSpawnCellY(randSpawnPoint.worldY);
-	getWorld():setLuaPosX(randSpawnPoint.posX);
-	getWorld():setLuaPosY(randSpawnPoint.posY);
-	getWorld():setLuaPosZ(randSpawnPoint.posZ or 0);
-end
-
 function CDCharRandomizerSettings:onGainJoypadFocus(joypadData)
 --    print("character profession gain focus");
     ISPanelJoypad.onGainJoypadFocus(self, joypadData);
@@ -1189,5 +1143,3 @@ end
 BCRC.pline = function (text) -- {{{ Print text to logfile
     print(tostring(text));
 end
-
-Events.OnInitWorld.Add(CDCharRandomizerSettings.initWorld);
