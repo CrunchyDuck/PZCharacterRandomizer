@@ -640,7 +640,7 @@ function CDCharRandomizerSettings:addTrait(from_listbox, to_listbox)
     
 	-- remove from the available traits
     from_listbox:removeItem(selectedTrait);
-    CharacterCreationMain.sort(self.listboxRequiredTraits.items);
+    CharacterCreationMain.sort(to_listbox.items);
 
 	-- reset cursor
 	-- self.listboxRequiredTraits.selected = -1;
@@ -653,17 +653,6 @@ function CDCharRandomizerSettings:addTrait(from_listbox, to_listbox)
 	-- self.addBannedTraitBtn:setEnable(false);
     -- self.addRequiredBadTraitBtn:setEnable(false);
     -- self.addBannedBadTraitBtn:setEnable(false);
-end
-
-function CDCharRandomizerSettings:isTraitExcluded(trait)
-	for i=1,self.listboxRequiredTraits:size() do
-		local selectedTrait = self.listboxRequiredTraits.items[i].item
-		local excludedTraits = selectedTrait:getMutuallyExclusiveTraits()
-		if excludedTraits:contains(trait:getType()) then
-			return true
-		end
-	end
-	return false
 end
 
 function CDCharRandomizerSettings:removeTrait(target_listbox)
@@ -692,6 +681,17 @@ function CDCharRandomizerSettings:removeTrait(target_listbox)
         -- self.addRequiredBadTraitBtn:setEnable(false);
         -- self.addBannedBadTraitBtn:setEnable(false);
 	end
+end
+
+function CDCharRandomizerSettings:isTraitExcluded(trait)
+	for i=1,self.listboxRequiredTraits:size() do
+		local selectedTrait = self.listboxRequiredTraits.items[i].item
+		local excludedTraits = selectedTrait:getMutuallyExclusiveTraits()
+		if excludedTraits:contains(trait:getType()) then
+			return true
+		end
+	end
+	return false
 end
 
 function CDCharRandomizerSettings:update()
