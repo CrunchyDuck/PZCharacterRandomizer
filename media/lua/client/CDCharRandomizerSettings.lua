@@ -16,7 +16,7 @@
 --- It's truly impressive, the dedication shown by The Indie Stone
 ---   to make codebase mirror the rotting dead carcasses their game is focused on.
 
--- TODO: Banned traits got misaligned.
+-- TODO: Add "null" profession.
 require"ISUI/ISPanel"
 require"ISUI/ISButton"
 require"ISUI/ISInventoryPane"
@@ -220,8 +220,8 @@ function CDCharRandomizerSettings:create()
 	self.listboxRequiredTraits.itemheight = 30;
 	self.listboxRequiredTraits.selected = -1;
 	self.listboxRequiredTraits.doDrawItem = CDCharRandomizerSettings.drawTraitMap;
-	self.listboxRequiredTraits:setOnMouseDownFunction(self, CDCharRandomizerSettings.onSelectChosenTrait);
-	self.listboxRequiredTraits:setOnMouseDoubleClick(self, CDCharRandomizerSettings.onDblClickSelectedTrait);
+	self.listboxRequiredTraits:setOnMouseDownFunction(self, CDCharRandomizerSettings.onSelectRequiredTrait);
+	self.listboxRequiredTraits:setOnMouseDoubleClick(self, CDCharRandomizerSettings.onDblClickRequiredTrait);
     self.listboxRequiredTraits.resetSelectionOnChangeFocus = true;
     self.listboxRequiredTraits.drawBorder = true
     self.listboxRequiredTraits.fontHgt = self.fontHgt
@@ -238,7 +238,7 @@ function CDCharRandomizerSettings:create()
 	self.listboxBannedTraits.itemheight = 30;
 	self.listboxBannedTraits.selected = -1;
 	self.listboxBannedTraits.doDrawItem = CDCharRandomizerSettings.drawTraitMap;  -- TODO: Check this.
-	self.listboxBannedTraits:setOnMouseDownFunction(self, CDCharRandomizerSettings.onSelectChosenTrait);
+	self.listboxBannedTraits:setOnMouseDownFunction(self, CDCharRandomizerSettings.onSelectBannedTrait);
 	self.listboxBannedTraits:setOnMouseDoubleClick(self, CDCharRandomizerSettings.onDblClickBannedTrait);
     self.listboxBannedTraits.resetSelectionOnChangeFocus = true;
     self.listboxBannedTraits.drawBorder = true
@@ -429,7 +429,76 @@ function CDCharRandomizerSettings:new(x, y, width, height)
 	return o
 end
 
-function CDCharRandomizerSettings:onDblClickSelectedTrait(item)
+function CharacterCreationMain.sortByCost(a, b)
+    if a.item:getCost() == b.item:getCost() then
+        return not string.sort(a.text, b.text)
+    end
+    return a.item:getCost() < b.item:getCost();
+end
+
+function CharacterCreationMain.sortByInvertCost(a, b)
+    if a.item:getCost() == b.item:getCost() then
+        return not string.sort(a.text, b.text)
+    end
+    return a.item:getCost() > b.item:getCost();
+end
+
+function CharacterCreationMain.sort(list)
+    table.sort(list, CharacterCreationMain.sortByCost);
+end
+
+function CharacterCreationMain.invertSort(list)
+    table.sort(list, CharacterCreationMain.sortByInvertCost);
+end
+
+function CDCharRandomizerSettings:setVisible(visible, joypadData)
+	ISPanelJoypad.setVisible(self, visible, joypadData);
+    if visible then
+        self:PrepareRandomizerSettings();
+    end
+end
+
+function CDCharRandomizerSettings:PrepareRandomizerSettings()
+    -- Load settings from CDCharRandomizer
+    local compare_trait_function = function(a, b)
+        return a.item:getType() == b;
+    end
+
+    for trait_name, _ in pairs(CDCharRandomizer.requiredTraits_hs) do
+        local i = CDTools.TableContains(self.listboxTrait.items, trait_name, compare_trait_function);
+        if i ~= -1 then
+            self.listboxTrait.selected = i;
+            self:addTrait(self.listboxTrait, self.listboxRequiredTraits);
+        else
+            local i = CDTools.TableContains(self.listboxBadTrait.items, trait_name, compare_trait_function);
+            if i ~= -1 then
+                self.listboxBadTrait.selected = i;
+                self:addTrait(self.listboxBadTrait, self.listboxRequiredTraits);
+            else
+                print("CDCharRandomizer: Could not find trait with name " .. trait_name);
+            end
+        end
+    end
+
+    for trait_name, _ in pairs(CDCharRandomizer.bannedTraits_hs) do
+        local i = CDTools.TableContains(self.listboxTrait.items, trait_name, compare_trait_function);
+        if i ~= -1 then
+            self.listboxTrait.selected = i;
+            self:addTrait(self.listboxTrait, self.listboxBannedTraits);
+        else
+            local i = CDTools.TableContains(self.listboxBadTrait.items, trait_name, compare_trait_function);
+            if i ~= -1 then
+                self.listboxBadTrait.selected = i;
+                self:addTrait(self.listboxBadTrait, self.listboxBannedTraits);
+            else
+                print("CDCharRandomizer: Could not find trait with name " .. trait_name);
+            end
+        end
+    end
+end
+
+-- {{ List element events 
+function CDCharRandomizerSettings:onDblClickRequiredTrait(item)
 	self:removeTrait(self.listboxRequiredTraits);
 end
 
@@ -472,11 +541,11 @@ function CDCharRandomizerSettings:onSelectProf(item)
             local newTrait = self.listboxRequiredTraits:addItem(freeTrait:getLabel(), freeTrait);
             newTrait.tooltip = freeTrait:getDescription();
             table.insert(self.freeTraits, freeTrait);
-            self:mutualyExclusive(freeTrait, false);
+            -- self:mutualyExclusive(freeTrait, false);
         end
 
         for _,trait in pairs(removed) do
-            self:mutualyExclusive(trait, true)
+            -- self:mutualyExclusive(trait, true)
         end
 
         self.profession = item;
@@ -493,38 +562,19 @@ function CDCharRandomizerSettings:onSelectProf(item)
      end
 end
 
-function CharacterCreationMain.sortByCost(a, b)
-    if a.item:getCost() == b.item:getCost() then
-        return not string.sort(a.text, b.text)
-    end
-    return a.item:getCost() < b.item:getCost();
-end
-
-function CharacterCreationMain.sortByInvertCost(a, b)
-    if a.item:getCost() == b.item:getCost() then
-        return not string.sort(a.text, b.text)
-    end
-    return a.item:getCost() > b.item:getCost();
-end
-
-function CharacterCreationMain.sort(list)
-    table.sort(list, CharacterCreationMain.sortByCost);
-end
-
-function CharacterCreationMain.invertSort(list)
-    table.sort(list, CharacterCreationMain.sortByInvertCost);
-end
-
-function CDCharRandomizerSettings:setVisible(visible, joypadData)
-	ISPanelJoypad.setVisible(self, visible, joypadData)
-end
-
--- {{ Button events
-function CDCharRandomizerSettings:onSelectChosenTrait(item)
+function CDCharRandomizerSettings:onSelectRequiredTrait(item)
 	if item:isFree() then
 		self.removeRequiredTraitBtn:setEnable(false);
 	else
 		self.removeRequiredTraitBtn:setEnable(true);
+	end
+end
+
+function CDCharRandomizerSettings:onSelectBannedTrait(item)
+	if item:isFree() then
+		self.removeBannedTraitBtn:setEnable(false);
+	else
+		self.removeBannedTraitBtn:setEnable(true);
 	end
 end
 
@@ -537,8 +587,21 @@ function CDCharRandomizerSettings:onSelectBadTrait(item)
     self.addRequiredBadTraitBtn:setEnable(true);
     self.addBannedBadTraitBtn:setEnable(true);
 end
+-- }}
 
+-- {{ Button events
 function CDCharRandomizerSettings:OnButtonBack(button, x, y)
+    CDCharRandomizer.requiredTraits_hs = {};
+    for _, trait in pairs(self.listboxRequiredTraits.items) do
+        CDCharRandomizer.requiredTraits_hs[trait.item:getType()] = true;
+    end
+    CDCharRandomizer.bannedTraits_hs = {};
+    for _, trait in pairs(self.listboxBannedTraits.items) do
+        CDCharRandomizer.bannedTraits_hs[trait.item:getType()] = true;
+    end
+
+    CDCharRandomizer.SaveRandomizerSettings();
+    
     if self.infoRichText then
         self.infoRichText:removeFromUIManager()
         self.infoRichText = nil
@@ -587,56 +650,53 @@ end
 -- }}
 
 function CDCharRandomizerSettings:addTrait(from_listbox, to_listbox)
-    local list = from_listbox
-
-	local selectedTrait = list.items[list.selected].text;
-	-- points left calcul
-	self.pointToSpend = self.pointToSpend - list.items[list.selected].item:getCost();
+	local selectedTrait = from_listbox.items[from_listbox.selected].text;
+    
+	local newItem = to_listbox:addItem(selectedTrait, from_listbox.items[from_listbox.selected].item);
+	newItem.tooltip = from_listbox.items[from_listbox.selected].tooltip;
+    
 	-- remove from the available traits
-    list:removeItem(selectedTrait);
-
-	local newItem = to_listbox:addItem(selectedTrait, list.items[list.selected].item);
-	newItem.tooltip = list.items[list.selected].tooltip;
+    from_listbox:removeItem(selectedTrait);
+    CharacterCreationMain.sort(self.listboxRequiredTraits.items);
 
 	-- reset cursor
-	self.listboxRequiredTraits.selected = -1;
-	self.listboxBannedTraits.selected = -1;
-    self.listboxBadTrait.selected = -1;
-    self.listboxTrait.selected = -1;
-	self.removeRequiredTraitBtn:setEnable(false);
-	self.removeBannedTraitBtn:setEnable(false);
-	self.addRequiredTraitBtn:setEnable(false);
-	self.addBannedTraitBtn:setEnable(false);
-    self.addRequiredBadTraitBtn:setEnable(false);
-    self.addBannedBadTraitBtn:setEnable(false);
-    CharacterCreationMain.sort(self.listboxRequiredTraits.items);
+	-- self.listboxRequiredTraits.selected = -1;
+	-- self.listboxBannedTraits.selected = -1;
+    -- self.listboxBadTrait.selected = -1;
+    -- self.listboxTrait.selected = -1;
+	-- self.removeRequiredTraitBtn:setEnable(false);
+	-- self.removeBannedTraitBtn:setEnable(false);
+	-- self.addRequiredTraitBtn:setEnable(false);
+	-- self.addBannedTraitBtn:setEnable(false);
+    -- self.addRequiredBadTraitBtn:setEnable(false);
+    -- self.addBannedBadTraitBtn:setEnable(false);
 end
 
-function CDCharRandomizerSettings:mutualyExclusive(trait, bAdd)
-	for i = 0, trait:getMutuallyExclusiveTraits():size() - 1 do
-		local exclusiveTrait = trait:getMutuallyExclusiveTraits():get(i);
-        exclusiveTrait = TraitFactory.getTrait(exclusiveTrait);
-		if exclusiveTrait:isFree() then
-			-- nothing
-		elseif not bAdd then
-			-- remove from our available traits list the exclusive ones
-            if exclusiveTrait:getCost() > 0 then
-                self.listboxTrait:removeItem(exclusiveTrait:getLabel());
-            else
-                self.listboxBadTrait:removeItem(exclusiveTrait:getLabel());
-            end
-		elseif not self:isTraitExcluded(exclusiveTrait) then
-			-- add the previously removed exclusive trait to the available ones
-            local newItem = {};
-            if exclusiveTrait:getCost() > 0 then
-			    newItem = self.listboxTrait:addItem(exclusiveTrait:getLabel(), exclusiveTrait);
-            else
-                newItem = self.listboxBadTrait:addItem(exclusiveTrait:getLabel(), exclusiveTrait);
-            end
-			newItem.tooltip = exclusiveTrait:getDescription();
-		end
-	end
-end
+-- function CDCharRandomizerSettings:mutualyExclusive(trait, bAdd)
+-- 	for i = 0, trait:getMutuallyExclusiveTraits():size() - 1 do
+-- 		local exclusiveTrait = trait:getMutuallyExclusiveTraits():get(i);
+--         exclusiveTrait = TraitFactory.getTrait(exclusiveTrait);
+-- 		if exclusiveTrait:isFree() then
+-- 			-- nothing
+-- 		elseif not bAdd then
+-- 			-- remove from our available traits list the exclusive ones
+--             if exclusiveTrait:getCost() > 0 then
+--                 self.listboxTrait:removeItem(exclusiveTrait:getLabel());
+--             else
+--                 self.listboxBadTrait:removeItem(exclusiveTrait:getLabel());
+--             end
+-- 		elseif not self:isTraitExcluded(exclusiveTrait) then
+-- 			-- add the previously removed exclusive trait to the available ones
+--             local newItem = {};
+--             if exclusiveTrait:getCost() > 0 then
+-- 			    newItem = self.listboxTrait:addItem(exclusiveTrait:getLabel(), exclusiveTrait);
+--             else
+--                 newItem = self.listboxBadTrait:addItem(exclusiveTrait:getLabel(), exclusiveTrait);
+--             end
+-- 			newItem.tooltip = exclusiveTrait:getDescription();
+-- 		end
+-- 	end
+-- end
 
 function CDCharRandomizerSettings:isTraitExcluded(trait)
 	for i=1,self.listboxRequiredTraits:size() do
@@ -650,7 +710,7 @@ function CDCharRandomizerSettings:isTraitExcluded(trait)
 end
 
 function CDCharRandomizerSettings:removeTrait(target_listbox)
-	local trait = target_listbox[target_listbox].item
+	local trait = target_listbox.items[target_listbox.selected].item
 	if not trait:isFree() then
 		-- remove from the selected traits
 		target_listbox:removeItem(trait:getLabel());
@@ -658,22 +718,22 @@ function CDCharRandomizerSettings:removeTrait(target_listbox)
         local newItem = {};
         if trait:getCost() > 0 then
     		newItem = self.listboxTrait:addItem(trait:getLabel(), trait);
+            CharacterCreationMain.sort(self.listboxTrait.items);
+        -- self.listboxTrait.selected = -1;
         else
             newItem = self.listboxBadTrait:addItem(trait:getLabel(), trait);
+            CharacterCreationMain.invertSort(self.listboxBadTrait.items);
+        -- self.listboxBadTrait.selected = -1;
         end
 		newItem.tooltip = trait:getDescription();
 
 		-- reset cursor
-		self.target_listbox.selected = -1;
-		self.listboxTrait.selected = -1;
-        self.listboxBadTrait.selected = -1;
-		self.removeRequiredTraitBtn:setEnable(false);
-		self.addRequiredTraitBtn:setEnable(false);
-		self.addBannedTraitBtn:setEnable(false);
-        self.addRequiredBadTraitBtn:setEnable(false);
-        self.addBannedBadTraitBtn:setEnable(false);
-        CharacterCreationMain.sort(self.listboxTrait.items);
-        CharacterCreationMain.invertSort(self.listboxBadTrait.items);
+		-- target_listbox.selected = -1;
+		-- self.removeRequiredTraitBtn:setEnable(false);
+		-- self.addRequiredTraitBtn:setEnable(false);
+		-- self.addBannedTraitBtn:setEnable(false);
+        -- self.addRequiredBadTraitBtn:setEnable(false);
+        -- self.addBannedBadTraitBtn:setEnable(false);
 	end
 end
 
@@ -790,7 +850,7 @@ function CDCharRandomizerSettings:render()
 	-- title over each table
 
 	self:drawText("Required Occupation", self.mainPanel:getX() + 16, self.listboxProf:getAbsoluteY() - self.mediumFontHgt - 8, 1, 1, 1, 1, UIFont.Medium);
-	self:drawText(getText("UI_characreation_availabletraits"), self.listboxTrait:getAbsoluteX(), self.listboxProf:getAbsoluteY() - self.mediumFontHgt - 8, 1, 1, 1, 1, UIFont.Medium);
+	self:drawText("Randomized Traits", self.listboxTrait:getAbsoluteX(), self.listboxProf:getAbsoluteY() - self.mediumFontHgt - 8, 1, 1, 1, 1, UIFont.Medium);
 	self:drawText("Required Traits", self.listboxRequiredTraits:getAbsoluteX(), self.listboxProf:getAbsoluteY() - self.mediumFontHgt - 8, 1, 1, 1, 1, UIFont.Medium);
 	self:drawText("Banned Traits", self.listboxBannedTraits:getAbsoluteX(), self.listboxBadTrait:getAbsoluteY() - self.mediumFontHgt - 8, 1, 1, 1, 1, UIFont.Medium);
 

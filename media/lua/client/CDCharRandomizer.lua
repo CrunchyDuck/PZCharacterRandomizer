@@ -1,17 +1,33 @@
 require "CDTools"
 
 CDCharRandomizer = {};
-CDCharRandomizer.requiredTraits_hs = {};  -- K: zombie.characters.traits.TraitFactory.Trait
+
 CDCharRandomizer.requiredProfession = nil;  -- zombie.characters.professions.ProfessionFactory.Profession
+-- I don't know if Trait.getType() is a unique identifier, but I couldn't find a way to access Trait.traitID. This might be it??
+CDCharRandomizer.requiredTraits_hs = {};  -- K: return of zombie.characters.traits.TraitFactory.Trait.getType()
+CDCharRandomizer.bannedTraits_hs = {};  -- K: return of zombie.characters.traits.TraitFactory.Trait.getType()
 CDCharRandomizer.coreMin_i = 2;
 CDCharRandomizer.coreMax_i = 5;
-CDCharRandomizer.lowValueCutoff_i = 4;
+CDCharRandomizer.lowValueCutoff_i = 6;
 
 CDCharRandomizerDefaults = CDTools.ShallowCopy(CDCharRandomizer);
 
 function CDCharRandomizer:SaveRandomizerSettings()
 	local writer = getFileWriter("CharacterRandomizerSettings.txt", true, false);
     local vals = {};
+    local traits_serialized = "";
+
+    for trait_name, _ in pairs(CDCharRandomizer.requiredTraits_hs) do
+        traits_serialized = traits_serialized .. trait_name .. ";";
+    end
+    vals.requiredTraits_hs = traits_serialized;
+
+    traits_serialized = "";
+    for trait_name, _ in pairs(CDCharRandomizer.bannedTraits_hs) do
+        traits_serialized = traits_serialized .. trait_name .. ";";
+    end
+    vals.bannedTraits_hs = traits_serialized;
+
     vals["coreMin_i"] = CDCharRandomizer.coreMin_i;
     vals["coreMax_i"] = CDCharRandomizer.coreMax_i;
     vals["lowValueCutoff_i"] = CDCharRandomizer.lowValueCutoff_i;
@@ -50,6 +66,26 @@ function CDCharRandomizer:LoadRandomizerSettings()
 
     -- Parse read values, or apply defaults.
     local curr_variable = "";
+
+    local curr_variable = "requiredTraits_hs";
+    if loaded_data[curr_variable] ~= nil then
+        for trait_name in string.gmatch(loaded_data[curr_variable], "([^;]*);") do
+            CDCharRandomizer[curr_variable][trait_name] = true;
+            print("CDCharRandomizer: " .. trait_name);
+        end
+    else
+        CDCharRandomizer[curr_variable] = CDCharRandomizerDefaults[curr_variable];
+    end
+    
+    local curr_variable = "bannedTraits_hs";
+    if loaded_data[curr_variable] ~= nil then
+        for trait_name in string.gmatch(loaded_data[curr_variable], "([^;]*);") do
+            CDCharRandomizer[curr_variable][trait_name] = true;
+            print("CDCharRandomizer: " .. trait_name);
+        end
+    else
+        CDCharRandomizer[curr_variable] = CDCharRandomizerDefaults[curr_variable];
+    end
 
     local curr_variable = "coreMin_i";
     if loaded_data[curr_variable] ~= nil then

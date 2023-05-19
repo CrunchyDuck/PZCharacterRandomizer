@@ -29,7 +29,6 @@ function CharacterCreationProfession:randomizeTraits()
 
     -- Sort traits by their costs.
     local trait_table_ar = {};  -- V: zombie.characters.traits.TraitFactory.Trait
-
     --- While I could use TraitFactory.getTraits() and filter it myself,
     ---   it seems more sustainable to rely on the game's sorting and
     ---   simply iterate on both lists.
@@ -39,6 +38,8 @@ function CharacterCreationProfession:randomizeTraits()
     for index, trait in pairs(self.listboxTrait.items) do
         trait_table_ar[#trait_table_ar + 1] = trait;
     end
+
+    self:CDHandleRequiredBannedTraits(trait_table_ar);
 
     --- Shuffle table. This will be our source of randomness.
     --- We will search through the table, from the first to the last element,
@@ -53,10 +54,8 @@ function CharacterCreationProfession:randomizeTraits()
     local core_current = 0
     for index, trait in pairs(trait_table_ar) do
         local cost = trait.item:getCost();
-        if math.abs(cost) > CDCharRandomizer.lowValueCutoff_i then
-            self:CDAddTrait(trait);
-            core_current = core_current + 1;
-        end
+        self:CDAddTrait(trait);
+        core_current = core_current + 1;
 
         if core_current >= core_num then
             break
@@ -64,9 +63,85 @@ function CharacterCreationProfession:randomizeTraits()
     end
 
     if core_current < core_num then
-        CDTools.CDDebug("Could not get core traits.");
+        print("CDCharRandomizer: Could not get core traits.");
     end
+
+    self:CDBalancePoints(trait_table_ar);
+end
+
+function CharacterCreationProfession:CDBalancePoints(trait_table_ar)
+    local points = self:PointToSpend();
+    if points == 0 then
+        return;
+    end
+
+    if points > 0 then
+        while points > 0 do
+            local found_trait = false;
+            points = self:PointToSpend();
     
+            for i, trait in pairs(trait_table_ar) do
+                local cost = trait.item:getCost();
+                if cost > 0 and points >= cost then
+                    self:CDAddTrait(trait);
+                    table.remove(trait_table_ar, i);
+                    found_trait = true;
+                    break;
+                end
+            end
+    
+            if not found_trait then
+                break
+            end
+        end
+    else
+        -- try to find the smallest negative value we can, in the random order.
+        local negative_attempts = 0;
+        while points < 0 do
+            local found_trait = false;
+            local bigger_negative = false;
+            points = self:PointToSpend();
+    
+            for i, trait in pairs(trait_table_ar) do
+                local cost = trait.item:getCost();
+                if cost < points then
+                    bigger_negative = true;
+                end
+
+                if cost < 0 and points + negative_attempts <= cost then
+                    self:CDAddTrait(trait);
+                    table.remove(trait_table_ar, i);
+                    found_trait = true;
+                    break;
+                end
+            end
+    
+            if found_trait then
+                -- no continue? :/
+            elseif not bigger_negative then
+                print("CDCharacterRandomizer: Could not find enough negative traits of offset positive traits!");
+                break
+            else
+                negative_attempts = negative_attempts - 1;
+            end
+        end
+    end   
+end
+
+function CharacterCreationProfession:CDHandleRequiredBannedTraits(trait_table_ar)
+    local tt = CDTools.ShallowCopy(trait_table_ar);
+    local num_removed = 0;
+    for index, trait in pairs(tt) do
+        local trait_name = trait.item:getType();
+        if CDCharRandomizer.requiredTraits_hs[trait_name] == true then
+            self:CDAddTrait(trait);
+            table.remove(trait_table_ar, index - num_removed);
+            num_removed = num_removed + 1;
+        elseif CDCharRandomizer.bannedTraits_hs[trait_name] == true then
+            table.remove(trait_table_ar, index - num_removed);
+            num_removed = num_removed + 1;
+        end
+    end
 end
 
 function CharacterCreationProfession:CDAddTrait(trait)

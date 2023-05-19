@@ -39,9 +39,15 @@ local function JavaArrayContains(array, item)
 end
 CDTools.JavaArrayContains = JavaArrayContains;
 
-local function TableContains(table, item)
+local function TableContains(table, item, comparison_func)
+    if comparison_func == nil then
+        comparison_func = function(a, b) 
+            return a == b;
+        end
+    end
+
     for index, value in pairs(table) do
-        if value == item then
+        if comparison_func(value, item) then
             return index;
         end
     end
