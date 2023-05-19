@@ -423,7 +423,7 @@ function CDCharRandomizerSettings:new(x, y, width, height)
 	o.defaultTop = "Shirt";
 	o.defaultBottoms = "Trousers";
     o.whiteBar = getTexture("media/ui/whitebar.png");
-	o.cost = 0;
+	-- o.cost = 0;
 	o.fontHgt = getTextManager():getFontFromEnum(UIFont.Small):getLineHeight()
 	CDCharRandomizerSettings.instance = o;
 	return o
@@ -515,6 +515,7 @@ function CDCharRandomizerSettings:onDblClickTrait(item)
 end
 
 function CDCharRandomizerSettings:onSelectProf(item)
+	local dummy_prof = item:getType() == "NoRequiredProfession";
     if self.profession ~= item then
         -- remove the previous free trait
         for j, k in pairs(self.freeTraits) do
@@ -525,6 +526,9 @@ function CDCharRandomizerSettings:onSelectProf(item)
 
         -- Remove chosen traits that are excluded by the profession's free traits.
         for i=self.listboxRequiredTraits:size(),1,-1 do
+			if dummy_prof then
+				break;
+			end
             local selectedTrait = self.listboxRequiredTraits.items[i].item
             for j=1,item:getFreeTraits():size() do
                 local freeTrait = TraitFactory.getTrait(item:getFreeTraits():get(j-1))
@@ -536,25 +540,18 @@ function CDCharRandomizerSettings:onSelectProf(item)
         end
 
         -- we add the free trait that our selected profession give us
-        for i = 0, item:getFreeTraits():size() - 1 do
-            local freeTrait = TraitFactory.getTrait(item:getFreeTraits():get(i));
-            local newTrait = self.listboxRequiredTraits:addItem(freeTrait:getLabel(), freeTrait);
-            newTrait.tooltip = freeTrait:getDescription();
-            table.insert(self.freeTraits, freeTrait);
-            -- self:mutualyExclusive(freeTrait, false);
-        end
-
-        for _,trait in pairs(removed) do
-            -- self:mutualyExclusive(trait, true)
-        end
+		if not dummy_prof then
+			for i = 0, item:getFreeTraits():size() - 1 do
+				local freeTrait = TraitFactory.getTrait(item:getFreeTraits():get(i));
+				local newTrait = self.listboxRequiredTraits:addItem(freeTrait:getLabel(), freeTrait);
+				newTrait.tooltip = freeTrait:getDescription();
+				table.insert(self.freeTraits, freeTrait);
+				-- self:mutualyExclusive(freeTrait, false);
+			end
+		end
 
         self.profession = item;
 
-		local desc = MainScreen.instance.desc;
-		desc:setProfessionSkills(self.profession);
-		desc:setProfession(self.profession:getType());
-
-		self.cost = self.profession:getCost();
         CharacterCreationMain.sort(self.listboxTrait.items);
         CharacterCreationMain.invertSort(self.listboxBadTrait.items);
         CharacterCreationMain.sort(self.listboxRequiredTraits.items);
@@ -591,6 +588,15 @@ end
 
 -- {{ Button events
 function CDCharRandomizerSettings:OnButtonBack(button, x, y)
+	local prof_name = "";
+	local prof = self.listboxProf.items[self.listboxProf.selected].item;
+	if prof:getType() == "NoRequiredProfession" then
+		prof_name = "";
+	else
+		prof_name = prof:getType();
+	end
+	CDCharRandomizer.requiredProfession_str = prof_name;
+
     CDCharRandomizer.requiredTraits_hs = {};
     for _, trait in pairs(self.listboxRequiredTraits.items) do
         CDCharRandomizer.requiredTraits_hs[trait.item:getType()] = true;
@@ -867,18 +873,18 @@ function CDCharRandomizerSettings:render()
 	end
 end
 
-function CDCharRandomizerSettings:PointToSpend()
-	if SandboxVars and SandboxVars.CharacterFreePoints then
-		return self.pointToSpend + self.cost + SandboxVars.CharacterFreePoints;
-	end
-	return self.pointToSpend + self.cost;
-end
-
 -- fetch all our profession to populate our list box
-function CDCharRandomizerSettings:populateProfessionList(list)
-	local professionList = ProfessionFactory.getProfessions();
+function CDCharRandomizerSettings:populateProfessionList(list)	
+	-- Add a dummy profession for "no required profession"
+	local prof = {};
+	prof.getName = function() return "No required profession" end
+	prof.getType = function() return "NoRequiredProfession" end
+	prof.getTexture = function() return nil end
+	list:addItem(0, prof).tooltip = "Profession will be randomized.";
+	
+	local professionList = ProfessionFactory.getProfessions();	
 	for i = 0, professionList:size() - 1 do
-		local newitem = list:addItem(i, professionList:get(i));
+		local newitem = list:addItem(i + 1, professionList:get(i));
         newitem.tooltip = professionList:get(i):getDescription();
 	end
 end
@@ -904,44 +910,6 @@ function CDCharRandomizerSettings:populateBadTraitList(list)
             newItem.tooltip = trait:getDescription();
         end
     end
-end
-
-function CDCharRandomizerSettings:drawXpBoostMap(y, item, alt)
-
-    local dy = (self.itemheight - self.fontHgt) / 2
-    local hc = getCore():getGoodHighlitedColor()
-    self:drawText(item.text, 16, y + dy, hc:getR(), hc:getG(), hc:getB(), 1, UIFont.Small);
-
-    local percentage = "+ 75%";
---    self:drawTexture(CDCharRandomizerSettings.instance.greenBlits, self.width - 80, (y) + 12, 1, 1, 1, 1);
-    if item.item.level == 2 then
-        percentage = "+ 100%";
---        self:drawTexture(CDCharRandomizerSettings.instance.greenBlits, self.width - 76, (y) + 12, 1, 1, 1, 1);
-    elseif item.item.level >= 3 then
-        percentage = "+ 125%";
---        self:drawTexture(CDCharRandomizerSettings.instance.greenBlits, self.width - 76, (y) + 12, 1, 1, 1, 1);
---        self:drawTexture(CDCharRandomizerSettings.instance.greenBlits, self.width - 72, (y) + 12, 1, 1, 1, 1);
-    end
-
-    local textWid = getTextManager():MeasureStringX(UIFont.Small, item.text)
-    local greenBlitsX = self.width - (68 + 10 * 4)
-    local yy = y
-    if 16 + textWid > greenBlitsX - 4 then
-        yy = y + self.fontHgt
-    end
-
-    for i = 1,item.item.level do
-        self:drawTexture(CDCharRandomizerSettings.instance.whiteBar, self.width - (68 + 10 * 4) + (i * 4), (yy) + dy + 4, 1, hc:getR(), hc:getG(), hc:getB());
-    end
-    if item.item.perk ~= Perks.Fitness and item.item.perk ~= Perks.Strength then
-        self:drawTextRight(percentage, self.width - 16, yy + dy, hc:getR(), hc:getG(), hc:getB(), 1, UIFont.Small);
-    end
-
-    yy = yy + self.itemheight;
-
-    self:drawRectBorder(0, (y), self:getWidth(), yy - y - 1, 0.5, self.borderColor.r, self.borderColor.g, self.borderColor.b);
-
-    return yy;
 end
 
 function CDCharRandomizerSettings:getTraitColor(trait)
@@ -1142,44 +1110,6 @@ function CDCharRandomizerSettings:onResolutionChange(oldw, oldh, neww, newh)
 
 --	MainScreen.instance.charCreationHeader:setX(self.mainPanel:getX());
 --	MainScreen.instance.charCreationHeader:setY(self.mainPanel:getY());
-end
-
-function CDCharRandomizerSettings:presetExists(findText)
-    return self.savedBuilds:find(function(text, data, findText)
-        return text == findText
-    end, findText) ~= -1
-end
-
-function CDCharRandomizerSettings:deleteBuildStep2(button, joypadData) -- {{{
-    if joypadData then
-        joypadData.focus = self.presetPanel
-        updateJoypadFocus(joypadData)
-    end
-
-    if button.internal == "NO" then return end
-    
-    local delBuild = self.savedBuilds.options[self.savedBuilds.selected];
-
-    local builds = BCRC.readSaveFile();
-    builds[delBuild] = nil;
-
-    local options = {};
-    BCRC.writeSaveFile(builds);
-    for key,val in pairs(builds) do
-        if key ~= nil and val ~= nil then
-            options[key] = 1;
-        end
-    end
-
-    self.savedBuilds.options = {};
-    for key,val in pairs(options) do
-        table.insert(self.savedBuilds.options, key);
-    end
-    if self.savedBuilds.selected > #self.savedBuilds.options then
-        self.savedBuilds.selected = #self.savedBuilds.options
-    end
-    self:loadBuild(self.savedBuilds)
---    luautils.okModal("Deleted build "..delBuild.."!", true);
 end
 
 BCRC = {};

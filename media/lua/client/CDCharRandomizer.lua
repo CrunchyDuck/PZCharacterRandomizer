@@ -2,7 +2,7 @@ require "CDTools"
 
 CDCharRandomizer = {};
 
-CDCharRandomizer.requiredProfession = nil;  -- zombie.characters.professions.ProfessionFactory.Profession
+CDCharRandomizer.requiredProfession_str = "";  -- return of zombie.characters.professions.ProfessionFactory.Profession.getType()
 -- I don't know if Trait.getType() is a unique identifier, but I couldn't find a way to access Trait.traitID. This might be it??
 CDCharRandomizer.requiredTraits_hs = {};  -- K: return of zombie.characters.traits.TraitFactory.Trait.getType()
 CDCharRandomizer.bannedTraits_hs = {};  -- K: return of zombie.characters.traits.TraitFactory.Trait.getType()
@@ -28,6 +28,7 @@ function CDCharRandomizer:SaveRandomizerSettings()
     end
     vals.bannedTraits_hs = traits_serialized;
 
+    vals["requiredProfession_str"] = CDCharRandomizer.requiredProfession_str;
     vals["coreMin_i"] = CDCharRandomizer.coreMin_i;
     vals["coreMax_i"] = CDCharRandomizer.coreMax_i;
     vals["lowValueCutoff_i"] = CDCharRandomizer.lowValueCutoff_i;
@@ -42,7 +43,6 @@ end
 function CDCharRandomizer:LoadRandomizerSettings()
 	local loaded_data = {};
 	local reader = getFileReader("CharacterRandomizerSettings.txt", false);
-    -- TODO: Default values.
 	if not reader then
 		return;
 	end
@@ -65,7 +65,12 @@ function CDCharRandomizer:LoadRandomizerSettings()
 	end
 
     -- Parse read values, or apply defaults.
-    local curr_variable = "";
+    local curr_variable = "requiredProfession_str";
+    if loaded_data[curr_variable] ~= nil then
+        CDCharRandomizer[curr_variable] = loaded_data[curr_variable];
+    else
+        CDCharRandomizer[curr_variable] = CDCharRandomizerDefaults[curr_variable];
+    end
 
     local curr_variable = "requiredTraits_hs";
     if loaded_data[curr_variable] ~= nil then

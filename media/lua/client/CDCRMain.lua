@@ -16,9 +16,27 @@ function CharacterCreationProfession:randomizeTraits()
     self:resetBuild();
 
     -- TODO: Required profession.
-    local index = ZombRand(#self.listboxProf.items)+1;  -- I will comment this every time - YUCK ONE-INDEXING
-    self.listboxProf.selected = index;
-    self:onSelectProf(self.listboxProf.items[self.listboxProf.selected].item);
+    if CDCharRandomizer.requiredProfession_str == "" then
+        local index = ZombRand(#self.listboxProf.items)+1;  -- I will comment this every time - YUCK ONE-INDEXING
+        self.listboxProf.selected = index;
+        self:onSelectProf(self.listboxProf.items[self.listboxProf.selected].item);
+    else
+        local found_profession = false;
+        for i, v in pairs(self.listboxProf.items) do
+            if v.item:getType() == CDCharRandomizer.requiredProfession_str then
+                self.listboxProf.selected = i;
+                self:onSelectProf(v.item);
+                found_profession = true;
+                break
+            end
+        end
+        if not found_profession then
+            print("CDCharRandomizer: Could not find profession with name " .. CDCharRandomizer.requiredProfession_str);
+            local index = ZombRand(#self.listboxProf.items)+1;  -- I will comment this every time - YUCK ONE-INDEXING
+            self.listboxProf.selected = index;
+            self:onSelectProf(self.listboxProf.items[self.listboxProf.selected].item);
+        end
+    end
 
     --- For now, instead of using a truly random algorithm, I'm choosing a few "core" traits,
     ---   high value traits that the build is based around.
