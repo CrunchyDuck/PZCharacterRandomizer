@@ -442,12 +442,12 @@ function CDCharRandomizerSettings:PrepareRandomizerSettings()
     end
 
     for trait_name, _ in pairs(CDCharRandomizer.requiredTraits_hs) do
-        local i = CDTools.TableContains(self.listboxTrait.items, trait_name, compare_trait_function);
+        local i = CDTools:TableContains(self.listboxTrait.items, trait_name, compare_trait_function);
         if i ~= -1 then
             self.listboxTrait.selected = i;
             self:addTrait(self.listboxTrait, self.listboxRequiredTraits);
         else
-            local i = CDTools.TableContains(self.listboxBadTrait.items, trait_name, compare_trait_function);
+            local i = CDTools:TableContains(self.listboxBadTrait.items, trait_name, compare_trait_function);
             if i ~= -1 then
                 self.listboxBadTrait.selected = i;
                 self:addTrait(self.listboxBadTrait, self.listboxRequiredTraits);
@@ -458,12 +458,12 @@ function CDCharRandomizerSettings:PrepareRandomizerSettings()
     end
 
     for trait_name, _ in pairs(CDCharRandomizer.bannedTraits_hs) do
-        local i = CDTools.TableContains(self.listboxTrait.items, trait_name, compare_trait_function);
+        local i = CDTools:TableContains(self.listboxTrait.items, trait_name, compare_trait_function);
         if i ~= -1 then
             self.listboxTrait.selected = i;
             self:addTrait(self.listboxTrait, self.listboxBannedTraits);
         else
-            local i = CDTools.TableContains(self.listboxBadTrait.items, trait_name, compare_trait_function);
+            local i = CDTools:TableContains(self.listboxBadTrait.items, trait_name, compare_trait_function);
             if i ~= -1 then
                 self.listboxBadTrait.selected = i;
                 self:addTrait(self.listboxBadTrait, self.listboxBannedTraits);

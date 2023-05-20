@@ -62,7 +62,7 @@ function CharacterCreationProfession:randomizeTraits()
     --- Shuffle table. This will be our source of randomness.
     --- We will search through the table, from the first to the last element,
     ---   till a valid trait matches. Then we remove that item from table and use it.
-    CDTools.FisherYatesShuffle(trait_table_ar);
+    CDTools:FisherYatesShuffle(trait_table_ar);
     
     -- Not sure if there's a random range function in zomboid 
     local core_range = CDCharRandomizer.coreMax_i - CDCharRandomizer.coreMin_i;
@@ -147,7 +147,7 @@ function CharacterCreationProfession:CDBalancePoints(trait_table_ar)
 end
 
 function CharacterCreationProfession:CDHandleRequiredBannedTraits(trait_table_ar)
-    local tt = CDTools.ShallowCopy(trait_table_ar);
+    local tt = CDTools:ShallowCopy(trait_table_ar);
     local num_removed = 0;
     for index, trait in pairs(tt) do
         local trait_name = trait.item:getType();
@@ -165,7 +165,7 @@ end
 function CharacterCreationProfession:CDAddTrait(trait)
     -- Add negative
     if trait.item:getCost() < 0 then
-        local i = CDTools.TableContains(self.listboxBadTrait.items, trait);
+        local i = CDTools:TableContains(self.listboxBadTrait.items, trait);
         if i == -1 then
             -- TODO: Figure out exception/debugging for this.
             return
@@ -174,7 +174,7 @@ function CharacterCreationProfession:CDAddTrait(trait)
         self:onOptionMouseDown(self.addBadTraitBtn);
     -- Add positive
     elseif trait.item:getCost() > 0 then
-        local i = CDTools.TableContains(self.listboxTrait.items, trait);
+        local i = CDTools:TableContains(self.listboxTrait.items, trait);
         if i == -1 then
             -- TODO: Figure out exception/debugging for this.
             return
@@ -182,7 +182,7 @@ function CharacterCreationProfession:CDAddTrait(trait)
         self.listboxTrait.selected = i;
         self:onOptionMouseDown(self.addTraitBtn);
     else
-        CDTools.CDDebug("Tried to add a trait with value of 0. I don't know how to!");
+        print("CDCharRandomizer: Tried to add a trait with value of 0. I don't know how to!");
     end
 end
 

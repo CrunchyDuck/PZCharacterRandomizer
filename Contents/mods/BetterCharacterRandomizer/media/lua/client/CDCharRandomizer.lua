@@ -10,7 +10,7 @@ CDCharRandomizer.coreMin_i = 2;
 CDCharRandomizer.coreMax_i = 5;
 CDCharRandomizer.lowValueCutoff_i = 6;
 
-CDCharRandomizerDefaults = CDTools.ShallowCopy(CDCharRandomizer);
+CDCharRandomizerDefaults = CDTools:ShallowCopy(CDCharRandomizer);
 
 function CDCharRandomizer:SaveRandomizerSettings()
 	local writer = getFileWriter("CharacterRandomizerSettings.txt", true, false);
