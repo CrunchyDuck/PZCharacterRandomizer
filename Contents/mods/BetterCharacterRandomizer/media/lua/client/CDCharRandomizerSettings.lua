@@ -441,6 +441,16 @@ function CDCharRandomizerSettings:PrepareRandomizerSettings()
         return a.item:getType() == b;
     end
 
+	if CDCharRandomizer.requiredProfession_str ~= nil then
+		local i = CDTools:TableContains(self.listboxProf.items, CDCharRandomizer.requiredProfession_str, compare_trait_function);
+		if i ~= -1 then
+			self.listboxProf.selected = i;
+			self:onSelectProf(ProfessionFactory.getProfessions():get(i));
+		else
+			print("CDCharRandomizer: Could not find profession with name " .. CDCharRandomizer.requiredProfession_str);
+		end
+	end
+
     for trait_name, _ in pairs(CDCharRandomizer.requiredTraits_hs) do
         local i = CDTools:TableContains(self.listboxTrait.items, trait_name, compare_trait_function);
         if i ~= -1 then
