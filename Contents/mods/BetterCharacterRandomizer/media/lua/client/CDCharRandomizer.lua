@@ -76,7 +76,6 @@ function CDCharRandomizer:LoadRandomizerSettings()
     if loaded_data[curr_variable] ~= nil then
         for trait_name in string.gmatch(loaded_data[curr_variable], "([^;]*);") do
             CDCharRandomizer[curr_variable][trait_name] = true;
-            print("CDCharRandomizer: " .. trait_name);
         end
     else
         CDCharRandomizer[curr_variable] = CDCharRandomizerDefaults[curr_variable];
@@ -86,7 +85,6 @@ function CDCharRandomizer:LoadRandomizerSettings()
     if loaded_data[curr_variable] ~= nil then
         for trait_name in string.gmatch(loaded_data[curr_variable], "([^;]*);") do
             CDCharRandomizer[curr_variable][trait_name] = true;
-            print("CDCharRandomizer: " .. trait_name);
         end
     else
         CDCharRandomizer[curr_variable] = CDCharRandomizerDefaults[curr_variable];
