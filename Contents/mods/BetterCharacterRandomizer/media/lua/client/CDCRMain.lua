@@ -3,6 +3,25 @@ require "CDTools"
 require "CDCharRandomizer"
 require "CDCharRandomizerSettings"
 
+-- TODO: Ban/Require profession
+-- TODO: Turn off buttons when adding/removing trait
+
+local col_b = {a = 0.1, r = 1, g = 0, b = 0};
+local col_r = {a = 0.1, r = 0, g = 1, b = 0};
+
+local draw_trait_map_base = CharacterCreationProfession.drawTraitMap;
+function CharacterCreationProfession:drawTraitMap(y, item, alt)
+    local trait_name = item.item:getType();
+    -- self:drawRect(0, y, self:getWidth(), self.itemheight - 1, col_r.a, col_r.r, col_r.g, col_r.b);
+    if CDCharRandomizer.requiredTraits_hs[trait_name] == true then
+        self:drawRect(0, y, self:getWidth(), self.itemheight - 1, col_r.a, col_r.r, col_r.g, col_r.b);
+    elseif CDCharRandomizer.bannedTraits_hs[trait_name] == true then
+        self:drawRect(0, y, self:getWidth(), self.itemheight - 1, col_b.a, col_b.r, col_b.g, col_b.b);
+    end
+
+    return draw_trait_map_base(self, y, item, alt);
+end
+
 -- TODO: UI for choosing traits in the character creation menu.
 function CharacterCreationProfession:randomizeTraits()
     -- Pick the required profession
@@ -189,44 +208,192 @@ end
 local ccp_create_base = CharacterCreationProfession.create;
 function CharacterCreationProfession:create()
     ccp_create_base(self);
+    self:PrepareRandomizerSettings();
 
-    local button_text = "RANDOM SETTINGS";
-    local textWid = getTextManager():MeasureStringX(UIFont.Small, button_text);
-	local randomSettingsButtonWid = math.max(100, textWid + 8 * 2);
-    self.randomSettingsButton = ISButton:new(self.resetButton:getX() - 10 - randomSettingsButtonWid, self.resetButton:getY(), randomSettingsButtonWid, self.resetButton.height, button_text, self, CharacterCreationProfession.OpenRandomizerSettings);
-    self.randomSettingsButton:initialise();
-    self.randomSettingsButton:instantiate();
-    self.randomSettingsButton:setAnchorLeft(false);
-    self.randomSettingsButton:setAnchorRight(true);
-    self.randomSettingsButton:setAnchorTop(false);
-    self.randomSettingsButton:setAnchorBottom(true);
-    self.randomSettingsButton.borderColor = { r = 1, g = 1, b = 1, a = 0.1 };
-    self.mainPanel:addChild(self.randomSettingsButton);
+    -- Add required positive trait
+    local x = self.addTraitBtn:getX() - 100;
+    self.addRequiredTraitBtn = ISButton:new(x, (self.listboxTrait:getY() + self.listboxTrait:getHeight()) + self.traitButtonPad, 50, self.traitButtonHgt, "Toggle Require", self, self.OnButtonRequireTrait);
+    self.addRequiredTraitBtn.internal = "REQUIRETRAIT";
+    self.addRequiredTraitBtn:initialise();
+    self.addRequiredTraitBtn:instantiate();
+    self.addRequiredTraitBtn:setAnchorLeft(true);
+    self.addRequiredTraitBtn:setAnchorRight(false);
+    self.addRequiredTraitBtn:setAnchorTop(false);
+    self.addRequiredTraitBtn:setAnchorBottom(true);
+    self.addRequiredTraitBtn:setEnable(false);
+    --	self.addRequiredTraitBtn.borderColor = { r = 1, g = 1, b = 1, a = 0.1 };
+    self.mainPanel:addChild(self.addRequiredTraitBtn);
+
+    -- Add required negative trait
+    self.addRequiredBadTraitBtn = ISButton:new(x, (self.listboxBadTrait:getY() + self.listboxBadTrait:getHeight()) + self.traitButtonPad, 50, self.traitButtonHgt, "Toggle Require", self, self.OnButtonRequireBadTrait);
+    self.addRequiredBadTraitBtn.internal = "REQUIREBADTRAIT";
+    self.addRequiredBadTraitBtn:initialise();
+    self.addRequiredBadTraitBtn:instantiate();
+    self.addRequiredBadTraitBtn:setAnchorLeft(true);
+    self.addRequiredBadTraitBtn:setAnchorRight(false);
+    self.addRequiredBadTraitBtn:setAnchorTop(false);
+    self.addRequiredBadTraitBtn:setAnchorBottom(true);
+    self.addRequiredBadTraitBtn:setEnable(false);
+    --	self.addRequiredTraitBtn.borderColor = { r = 1, g = 1, b = 1, a = 0.1 };
+    self.mainPanel:addChild(self.addRequiredBadTraitBtn);
+
+    local x = self.addTraitBtn:getX() - self.addRequiredTraitBtn:getWidth() - 10;
+    self.addRequiredBadTraitBtn:setX(x);
+    self.addRequiredTraitBtn:setX(x);
+
+    -- Add banned positive trait
+    local x = self.addRequiredTraitBtn:getX() - 100;
+	self.addBannedTraitBtn = ISButton:new(x, self.addRequiredTraitBtn:getY(), 50, self.traitButtonHgt, "Toggle Ban", self, self.OnButtonBanTrait);
+    self.addBannedTraitBtn.internal = "BANTRAIT";
+	self.addBannedTraitBtn:initialise();
+	self.addBannedTraitBtn:instantiate();
+	self.addBannedTraitBtn:setAnchorLeft(false);
+	self.addBannedTraitBtn:setAnchorRight(true);
+	self.addBannedTraitBtn:setAnchorTop(false);
+	self.addBannedTraitBtn:setAnchorBottom(true);
+    self.addBannedTraitBtn:setEnable(false);
+	-- self.addBannedTraitBtn.borderColor = { r = 1, g = 1, b = 1, a = 0.1 };
+	self.mainPanel:addChild(self.addBannedTraitBtn);
+
+    -- Add banned negative trait
+	self.addBannedBadTraitBtn = ISButton:new(x, self.addRequiredBadTraitBtn:getY(), 50, self.traitButtonHgt, "Toggle Ban", self, self.OnButtonBanBadTrait);
+    self.addBannedBadTraitBtn.internal = "BANBADTRAIT";
+	self.addBannedBadTraitBtn:initialise();
+	self.addBannedBadTraitBtn:instantiate();
+	self.addBannedBadTraitBtn:setAnchorLeft(false);
+	self.addBannedBadTraitBtn:setAnchorRight(true);
+	self.addBannedBadTraitBtn:setAnchorTop(false);
+	self.addBannedBadTraitBtn:setAnchorBottom(true);
+    self.addBannedBadTraitBtn:setEnable(false);
+	-- self.addBannedBadTraitBtn.borderColor = { r = 1, g = 1, b = 1, a = 0.1 };
+	self.mainPanel:addChild(self.addBannedBadTraitBtn);
+
+    local x = self.addRequiredBadTraitBtn:getX() - self.addBannedTraitBtn:getWidth() - 7;
+    self.addBannedBadTraitBtn:setX(x);
+    self.addBannedTraitBtn:setX(x);
 end
 
-function CharacterCreationProfession:OpenRandomizerSettings()
-    local joypadData = JoypadState.getMainMenuJoypad() or CoopCharacterCreation.getJoypad();
-    MainScreen.instance.charCreationProfession:setVisible(false);
-    CDCharRandomizerSettings:setVisible(true, joypadData);
-end
-
-
-local main_screen_instantiate_base = MainScreen.instantiate;
-function MainScreen:instantiate()
-    main_screen_instantiate_base(self);
-
-    if not self.inGame and not isDemo() then
-        CDCharRandomizerSettings = CDCharRandomizerSettings:new(0, 0, self.width, self.height);
-        CDCharRandomizerSettings:initialise();
-        CDCharRandomizerSettings:setVisible(false);
-        CDCharRandomizerSettings:setAnchorRight(true);
-        CDCharRandomizerSettings:setAnchorLeft(true);
-        CDCharRandomizerSettings:setAnchorBottom(true);
-        CDCharRandomizerSettings:setAnchorTop(true);
-        CDCharRandomizerSettings.backgroundColor = {r=0, g=0, b=0, a=0.0};
-        CDCharRandomizerSettings.borderColor = {r=1, g=1, b=1, a=0.0};
-
-        self:addChild(CDCharRandomizerSettings);
-        CDCharRandomizerSettings:create();
+function CharacterCreationProfession:PrepareRandomizerSettings()
+    -- Load settings from CDCharRandomizer
+    local compare_trait_function = function(a, b)
+        return a.item:getType() == b;
     end
+
+	if CDCharRandomizer.requiredProfession_str ~= nil then
+        local it = self.listboxProf.items;
+        local p = CDCharRandomizer.requiredProfession_str;
+		local i = CDTools:TableContains(it, p, compare_trait_function);
+		if i ~= -1 then
+			self.listboxProf.selected = i;
+			self:onSelectProf(ProfessionFactory.getProfessions():get(i));
+		else
+			print("CDCharRandomizer: Could not find profession with name " .. CDCharRandomizer.requiredProfession_str);
+		end
+	end
+
+    -- for trait_name, _ in pairs(CDCharRandomizer.requiredTraits_hs) do
+    --     local i = CDTools:TableContains(self.listboxTrait.items, trait_name, compare_trait_function);
+    --     if i ~= -1 then
+    --         self.listboxTrait.selected = i;
+    --         self:addTrait(self.listboxTrait, self.listboxRequiredTraits);
+    --     else
+    --         local i = CDTools:TableContains(self.listboxBadTrait.items, trait_name, compare_trait_function);
+    --         if i ~= -1 then
+    --             self.listboxBadTrait.selected = i;
+    --             self:addTrait(self.listboxBadTrait, self.listboxRequiredTraits);
+    --         else
+    --             print("CDCharRandomizer: Could not find trait with name " .. trait_name);
+    --         end
+    --     end
+    -- end
+
+    -- for trait_name, _ in pairs(CDCharRandomizer.bannedTraits_hs) do
+    --     local i = CDTools:TableContains(self.listboxTrait.items, trait_name, compare_trait_function);
+    --     if i ~= -1 then
+    --         self.listboxTrait.selected = i;
+    --         self:addTrait(self.listboxTrait, self.listboxBannedTraits);
+    --     else
+    --         local i = CDTools:TableContains(self.listboxBadTrait.items, trait_name, compare_trait_function);
+    --         if i ~= -1 then
+    --             self.listboxBadTrait.selected = i;
+    --             self:addTrait(self.listboxBadTrait, self.listboxBannedTraits);
+    --         else
+    --             print("CDCharRandomizer: Could not find trait with name " .. trait_name);
+    --         end
+    --     end
+    -- end
+end
+
+function CharacterCreationProfession:OnButtonBanTrait(button, x, y)
+    if self.listboxTrait.selected <= 0 then return end;
+    local item = self.listboxTrait.items[self.listboxTrait.selected].item:getType();
+
+    if CDCharRandomizer.requiredTraits_hs[item] == true then
+        CDCharacterRandomizer.requiredTraits_hs[item] = nil;
+    end
+
+    if CDCharRandomizer.bannedTraits_hs[item] == true then
+        CDCharRandomizer.bannedTraits_hs[item] = nil;
+    else
+        CDCharRandomizer.bannedTraits_hs[item] = true;
+    end
+end
+
+function CharacterCreationProfession:OnButtonBanBadTrait(button, x, y)
+    if self.listboxBadTrait.selected <= 0 then return end;
+    local item = self.listboxBadTrait.items[self.listboxBadTrait.selected].item:getType();
+
+    if CDCharRandomizer.requiredTraits_hs[item] == true then
+        CDCharacterRandomizer.requiredTraits_hs[item] = nil;
+    end
+
+    if CDCharRandomizer.bannedTraits_hs[item] == true then
+        CDCharRandomizer.bannedTraits_hs[item] = nil;
+    else
+        CDCharRandomizer.bannedTraits_hs[item] = true;
+    end
+end
+
+function CharacterCreationProfession:OnButtonRequireTrait(button, x, y)
+    if self.listboxTrait.selected <= 0 then return end;
+    local item = self.listboxTrait.items[self.listboxTrait.selected].item:getType();
+
+    if CDCharRandomizer.bannedTraits_hs[item] == true then
+        CDCharacterRandomizer.bannedTraits_hs[item] = nil;
+    end
+
+    if CDCharRandomizer.requiredTraits_hs[item] == true then
+        CDCharRandomizer.requiredTraits_hs[item] = nil;
+    else
+        CDCharRandomizer.requiredTraits_hs[item] = true;
+    end
+end
+
+function CharacterCreationProfession:OnButtonRequireBadTrait(button, x, y)
+    if self.listboxBadTrait.selected <= 0 then return end;
+    local item = self.listboxBadTrait.items[self.listboxBadTrait.selected].item:getType();
+
+    if CDCharRandomizer.bannedTraits_hs[item] == true then
+        CDCharacterRandomizer.bannedTraits_hs[item] = nil;
+    end
+
+    if CDCharRandomizer.requiredTraits_hs[item] == true then
+        CDCharRandomizer.requiredTraits_hs[item] = nil;
+    else
+        CDCharRandomizer.requiredTraits_hs[item] = true;
+    end
+end
+
+local select_bad_base = CharacterCreationProfession.onSelectBadTrait;
+function CharacterCreationProfession:onSelectBadTrait(item)
+    select_bad_base(self, item);
+    self.addRequiredBadTraitBtn:setEnable(true);
+    self.addBannedBadTraitBtn:setEnable(true);
+end
+
+local select_base = CharacterCreationProfession.onSelectTrait;
+function CharacterCreationProfession:onSelectTrait(item)
+    select_base(self, item);
+    self.addRequiredTraitBtn:setEnable(true);
+    self.addBannedTraitBtn:setEnable(true);
 end
