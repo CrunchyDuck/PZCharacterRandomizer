@@ -1,4 +1,4 @@
-name=Better Character Randomization
+name=[CD] Better Character Randomization
 id=CDCharRando
-description=
+description=Allows more control when randomizing characters, letting you set required/banned profession/traits, adds a "Blind Randomization" button, and improves the randomization algorithm.
 poster=poster.png
