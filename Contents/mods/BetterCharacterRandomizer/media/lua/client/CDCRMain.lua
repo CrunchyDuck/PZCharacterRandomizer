@@ -139,9 +139,20 @@ function CharacterCreationProfession:randomizeTraits()
 
     -- TODO: Required profession.
     if CDCharRandomizer.requiredProfession_str == "" then
-        local index = ZombRand(#self.listboxProf.items)+1;  -- I will comment this every time - YUCK ONE-INDEXING
-        self.listboxProf.selected = index;
-        self:onSelectProf(self.listboxProf.items[self.listboxProf.selected].item);
+        local prof_list = CDTools:ShallowCopy(self.listboxProf.items);
+        CDTools:FisherYatesShuffle(prof_list);
+
+        local found_prof = false;
+        for _, prof in pairs(prof_list) do
+            if CDCharRandomizer.bannedProfessions_hs[prof.item:getType()] ~= true then
+                found_prof = true;
+                self.listboxProf.selected = prof.index;
+                self:onSelectProf(self.listboxProf.items[self.listboxProf.selected].item);
+            end
+        end
+        if found_prof ~= true then
+            print("CDCharRandomizer: Could not find a valid profession!");
+        end
     else
         local found_profession = false;
         for i, v in pairs(self.listboxProf.items) do
