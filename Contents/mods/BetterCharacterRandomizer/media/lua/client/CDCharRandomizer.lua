@@ -30,6 +30,12 @@ function CDCharRandomizer:SaveRandomizerSettings()
     end
     vals.bannedTraits_hs = traits_serialized;
 
+    profs_serialized = "";
+    for prof_name, _ in pairs(CDCharRandomizer.bannedProfessions_hs) do
+        profs_serialized = profs_serialized .. prof_name .. ";";
+    end
+    vals.bannedProfessions_hs = profs_serialized;
+
     vals["requiredProfession_str"] = CDCharRandomizer.requiredProfession_str;
     vals["coreMin_i"] = CDCharRandomizer.coreMin_i;
     vals["coreMax_i"] = CDCharRandomizer.coreMax_i;
@@ -70,6 +76,15 @@ function CDCharRandomizer:LoadRandomizerSettings()
     local curr_variable = "requiredProfession_str";
     if loaded_data[curr_variable] ~= nil then
         CDCharRandomizer[curr_variable] = loaded_data[curr_variable];
+    else
+        CDCharRandomizer[curr_variable] = CDCharRandomizerDefaults[curr_variable];
+    end
+
+    local curr_variable = "bannedProfessions_hs";
+    if loaded_data[curr_variable] ~= nil then
+        for prof_name in string.gmatch(loaded_data[curr_variable], "([^;]*);") do
+            CDCharRandomizer[curr_variable][prof_name] = true;
+        end
     else
         CDCharRandomizer[curr_variable] = CDCharRandomizerDefaults[curr_variable];
     end
