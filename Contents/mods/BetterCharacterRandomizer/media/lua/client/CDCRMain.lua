@@ -5,14 +5,105 @@ require "CDCharRandomizerSettings"
 
 -- TODO: Ban/Require profession
 -- TODO: Turn off buttons when adding/removing trait
+-- TODO: Randomize and move to next page.
 
 local col_b = {a = 0.1, r = 1, g = 0, b = 0};
 local col_r = {a = 0.1, r = 0, g = 1, b = 0};
 
+local ccp_create_base = CharacterCreationProfession.create;
+function CharacterCreationProfession:create()
+    ccp_create_base(self);
+    self:PrepareRandomizerSettings();
+
+    -- Add required positive trait
+    local x = self.addTraitBtn:getX() - 100;
+    self.requireTraitBtn = ISButton:new(x, (self.listboxTrait:getY() + self.listboxTrait:getHeight()) + self.traitButtonPad, 50, self.traitButtonHgt, "Toggle Require", self, self.OnButtonRequireTrait);
+    self.requireTraitBtn.internal = "REQUIRETRAIT";
+    self.requireTraitBtn:initialise();
+    self.requireTraitBtn:instantiate();
+    self.requireTraitBtn:setAnchorLeft(true);
+    self.requireTraitBtn:setAnchorRight(false);
+    self.requireTraitBtn:setAnchorTop(false);
+    self.requireTraitBtn:setAnchorBottom(true);
+    self.requireTraitBtn:setEnable(false);
+    self.mainPanel:addChild(self.requireTraitBtn);
+
+    -- Add required negative trait
+    self.requireBadTraitBtn = ISButton:new(x, (self.listboxBadTrait:getY() + self.listboxBadTrait:getHeight()) + self.traitButtonPad, 50, self.traitButtonHgt, "Toggle Require", self, self.OnButtonRequireBadTrait);
+    self.requireBadTraitBtn.internal = "REQUIREBADTRAIT";
+    self.requireBadTraitBtn:initialise();
+    self.requireBadTraitBtn:instantiate();
+    self.requireBadTraitBtn:setAnchorLeft(true);
+    self.requireBadTraitBtn:setAnchorRight(false);
+    self.requireBadTraitBtn:setAnchorTop(false);
+    self.requireBadTraitBtn:setAnchorBottom(true);
+    self.requireBadTraitBtn:setEnable(false);
+    self.mainPanel:addChild(self.requireBadTraitBtn);
+
+    local require_butt_width = self.requireBadTraitBtn:getWidth();
+    local x = self.addTraitBtn:getX() - require_butt_width - 10;
+    self.requireBadTraitBtn:setX(x);
+    self.requireTraitBtn:setX(x);
+
+    -- Add banned positive trait
+    local x = self.requireTraitBtn:getX() - 100;
+	self.banTraitBtn = ISButton:new(x, self.requireTraitBtn:getY(), 50, self.traitButtonHgt, "Toggle Ban", self, self.OnButtonBanTrait);
+    self.banTraitBtn.internal = "BANTRAIT";
+	self.banTraitBtn:initialise();
+	self.banTraitBtn:instantiate();
+	self.banTraitBtn:setAnchorLeft(false);
+	self.banTraitBtn:setAnchorRight(true);
+	self.banTraitBtn:setAnchorTop(false);
+	self.banTraitBtn:setAnchorBottom(true);
+    self.banTraitBtn:setEnable(false);
+	self.mainPanel:addChild(self.banTraitBtn);
+
+    -- Add banned negative trait
+	self.banBadTraitBtn = ISButton:new(x, self.requireBadTraitBtn:getY(), 50, self.traitButtonHgt, "Toggle Ban", self, self.OnButtonBanBadTrait);
+    self.banBadTraitBtn.internal = "BANBADTRAIT";
+	self.banBadTraitBtn:initialise();
+	self.banBadTraitBtn:instantiate();
+	self.banBadTraitBtn:setAnchorLeft(false);
+	self.banBadTraitBtn:setAnchorRight(true);
+	self.banBadTraitBtn:setAnchorTop(false);
+	self.banBadTraitBtn:setAnchorBottom(true);
+    self.banBadTraitBtn:setEnable(false);
+	self.mainPanel:addChild(self.banBadTraitBtn);
+
+    local ban_butt_width = self.banTraitBtn:getWidth();
+    local x = self.requireBadTraitBtn:getX() - ban_butt_width - 7;
+    self.banBadTraitBtn:setX(x);
+    self.banTraitBtn:setX(x);
+
+    local x = self.listboxProf:getX() + self.listboxProf:getWidth() - require_butt_width;
+    local y = self.listboxProf:getY() + self.listboxProf:getHeight() + self.traitButtonPad;
+    self.requireProfBtn = ISButton:new(x, y, 50, self.traitButtonHgt, "Toggle Require", self, self.OnButtonRequireProfession);
+    self.requireProfBtn.internal = "REQUIREPROF";
+    self.requireProfBtn:initialise();
+    self.requireProfBtn:instantiate();
+    self.requireProfBtn:setAnchorLeft(true);
+    self.requireProfBtn:setAnchorRight(false);
+    self.requireProfBtn:setAnchorTop(false);
+    self.requireProfBtn:setAnchorBottom(true);
+    self.requireProfBtn:setEnable(false);
+    self.mainPanel:addChild(self.requireProfBtn);
+    
+    local x = self.requireProfBtn:getX() - ban_butt_width - 7;
+    self.banProfBtn = ISButton:new(x, y, 50, self.traitButtonHgt, "Toggle Ban", self, self.OnButtonBanProfession);
+    self.banProfBtn.internal = "BANPROF";
+    self.banProfBtn:initialise();
+    self.banProfBtn:instantiate();
+    self.banProfBtn:setAnchorLeft(true);
+    self.banProfBtn:setAnchorRight(false);
+    self.banProfBtn:setAnchorTop(false);
+    self.banProfBtn:setAnchorBottom(true);
+    self.banProfBtn:setEnable(false);
+    self.mainPanel:addChild(self.banProfBtn);
+end
+
 local draw_trait_map_base = CharacterCreationProfession.drawTraitMap;
 function CharacterCreationProfession:drawTraitMap(y, item, alt)
     local trait_name = item.item:getType();
-    -- self:drawRect(0, y, self:getWidth(), self.itemheight - 1, col_r.a, col_r.r, col_r.g, col_r.b);
     if CDCharRandomizer.requiredTraits_hs[trait_name] == true then
         self:drawRect(0, y, self:getWidth(), self.itemheight - 1, col_r.a, col_r.r, col_r.g, col_r.b);
     elseif CDCharRandomizer.bannedTraits_hs[trait_name] == true then
@@ -20,6 +111,18 @@ function CharacterCreationProfession:drawTraitMap(y, item, alt)
     end
 
     return draw_trait_map_base(self, y, item, alt);
+end
+
+local draw_prof_map_base = CharacterCreationProfession.drawProfessionMap;
+function CharacterCreationProfession:drawProfessionMap(y, item, alt)
+    local prof_name = item.item:getType();
+    if CDCharRandomizer.requiredProfession_str == prof_name then
+        self:drawRect(0, y, self:getWidth(), self.itemheight - 1, col_r.a, col_r.r, col_r.g, col_r.b);
+    elseif CDCharRandomizer.bannedProfessions_hs[prof_name] == true then
+        self:drawRect(0, y, self:getWidth(), self.itemheight - 1, col_b.a, col_b.r, col_b.g, col_b.b);
+    end
+
+    return draw_prof_map_base(self, y, item, alt);
 end
 
 -- TODO: UI for choosing traits in the character creation menu.
@@ -205,72 +308,12 @@ function CharacterCreationProfession:CDAddTrait(trait)
     end
 end
 
-local ccp_create_base = CharacterCreationProfession.create;
-function CharacterCreationProfession:create()
-    ccp_create_base(self);
-    self:PrepareRandomizerSettings();
-
-    -- Add required positive trait
-    local x = self.addTraitBtn:getX() - 100;
-    self.addRequiredTraitBtn = ISButton:new(x, (self.listboxTrait:getY() + self.listboxTrait:getHeight()) + self.traitButtonPad, 50, self.traitButtonHgt, "Toggle Require", self, self.OnButtonRequireTrait);
-    self.addRequiredTraitBtn.internal = "REQUIRETRAIT";
-    self.addRequiredTraitBtn:initialise();
-    self.addRequiredTraitBtn:instantiate();
-    self.addRequiredTraitBtn:setAnchorLeft(true);
-    self.addRequiredTraitBtn:setAnchorRight(false);
-    self.addRequiredTraitBtn:setAnchorTop(false);
-    self.addRequiredTraitBtn:setAnchorBottom(true);
-    self.addRequiredTraitBtn:setEnable(false);
-    --	self.addRequiredTraitBtn.borderColor = { r = 1, g = 1, b = 1, a = 0.1 };
-    self.mainPanel:addChild(self.addRequiredTraitBtn);
-
-    -- Add required negative trait
-    self.addRequiredBadTraitBtn = ISButton:new(x, (self.listboxBadTrait:getY() + self.listboxBadTrait:getHeight()) + self.traitButtonPad, 50, self.traitButtonHgt, "Toggle Require", self, self.OnButtonRequireBadTrait);
-    self.addRequiredBadTraitBtn.internal = "REQUIREBADTRAIT";
-    self.addRequiredBadTraitBtn:initialise();
-    self.addRequiredBadTraitBtn:instantiate();
-    self.addRequiredBadTraitBtn:setAnchorLeft(true);
-    self.addRequiredBadTraitBtn:setAnchorRight(false);
-    self.addRequiredBadTraitBtn:setAnchorTop(false);
-    self.addRequiredBadTraitBtn:setAnchorBottom(true);
-    self.addRequiredBadTraitBtn:setEnable(false);
-    --	self.addRequiredTraitBtn.borderColor = { r = 1, g = 1, b = 1, a = 0.1 };
-    self.mainPanel:addChild(self.addRequiredBadTraitBtn);
-
-    local x = self.addTraitBtn:getX() - self.addRequiredTraitBtn:getWidth() - 10;
-    self.addRequiredBadTraitBtn:setX(x);
-    self.addRequiredTraitBtn:setX(x);
-
-    -- Add banned positive trait
-    local x = self.addRequiredTraitBtn:getX() - 100;
-	self.addBannedTraitBtn = ISButton:new(x, self.addRequiredTraitBtn:getY(), 50, self.traitButtonHgt, "Toggle Ban", self, self.OnButtonBanTrait);
-    self.addBannedTraitBtn.internal = "BANTRAIT";
-	self.addBannedTraitBtn:initialise();
-	self.addBannedTraitBtn:instantiate();
-	self.addBannedTraitBtn:setAnchorLeft(false);
-	self.addBannedTraitBtn:setAnchorRight(true);
-	self.addBannedTraitBtn:setAnchorTop(false);
-	self.addBannedTraitBtn:setAnchorBottom(true);
-    self.addBannedTraitBtn:setEnable(false);
-	-- self.addBannedTraitBtn.borderColor = { r = 1, g = 1, b = 1, a = 0.1 };
-	self.mainPanel:addChild(self.addBannedTraitBtn);
-
-    -- Add banned negative trait
-	self.addBannedBadTraitBtn = ISButton:new(x, self.addRequiredBadTraitBtn:getY(), 50, self.traitButtonHgt, "Toggle Ban", self, self.OnButtonBanBadTrait);
-    self.addBannedBadTraitBtn.internal = "BANBADTRAIT";
-	self.addBannedBadTraitBtn:initialise();
-	self.addBannedBadTraitBtn:instantiate();
-	self.addBannedBadTraitBtn:setAnchorLeft(false);
-	self.addBannedBadTraitBtn:setAnchorRight(true);
-	self.addBannedBadTraitBtn:setAnchorTop(false);
-	self.addBannedBadTraitBtn:setAnchorBottom(true);
-    self.addBannedBadTraitBtn:setEnable(false);
-	-- self.addBannedBadTraitBtn.borderColor = { r = 1, g = 1, b = 1, a = 0.1 };
-	self.mainPanel:addChild(self.addBannedBadTraitBtn);
-
-    local x = self.addRequiredBadTraitBtn:getX() - self.addBannedTraitBtn:getWidth() - 7;
-    self.addBannedBadTraitBtn:setX(x);
-    self.addBannedTraitBtn:setX(x);
+local visible_base = CharacterCreationProfession.setVisible;
+function CharacterCreationProfession:setVisible(visible, joypadData)
+    visible_base(self, visible, joypadData);
+    if visible ~= true then
+        CDCharRandomizer.SaveRandomizerSettings();
+    end
 end
 
 function CharacterCreationProfession:PrepareRandomizerSettings()
@@ -384,16 +427,58 @@ function CharacterCreationProfession:OnButtonRequireBadTrait(button, x, y)
     end
 end
 
+function CharacterCreationProfession:OnButtonBanProfession(button, x, y)
+    if self.listboxProf.selected <= 0 then return end;
+    local item = self.listboxProf.items[self.listboxProf.selected].item:getType();
+    
+
+    if CDCharRandomizer.requiredProfession_str == item then
+        CDCharRandomizer.requiredProfession_str = "";
+    end
+
+    if CDCharRandomizer.bannedProfessions_hs[item] == true then
+        CDCharRandomizer.bannedProfessions_hs[item] = nil;
+    else
+        CDCharRandomizer.bannedProfessions_hs[item] = true;
+    end
+end
+
+function CharacterCreationProfession:OnButtonRequireProfession(button, x, y)
+    if self.listboxProf.selected <= 0 then return end;
+    local item = self.listboxProf.items[self.listboxProf.selected].item:getType();
+    
+
+    if CDCharRandomizer.bannedProfessions_hs[item] == true then
+        CDCharRandomizer.bannedProfessions_hs[item] = nil;
+    end
+
+    if CDCharRandomizer.requiredProfession_str == item then
+        CDCharRandomizer.requiredProfession_str = "";
+    else
+        CDCharRandomizer.requiredProfession_str = item;
+    end
+end
+
 local select_bad_base = CharacterCreationProfession.onSelectBadTrait;
 function CharacterCreationProfession:onSelectBadTrait(item)
     select_bad_base(self, item);
-    self.addRequiredBadTraitBtn:setEnable(true);
-    self.addBannedBadTraitBtn:setEnable(true);
+    self.requireBadTraitBtn:setEnable(true);
+    self.banBadTraitBtn:setEnable(true);
 end
 
 local select_base = CharacterCreationProfession.onSelectTrait;
 function CharacterCreationProfession:onSelectTrait(item)
     select_base(self, item);
-    self.addRequiredTraitBtn:setEnable(true);
-    self.addBannedTraitBtn:setEnable(true);
+    self.requireTraitBtn:setEnable(true);
+    self.banTraitBtn:setEnable(true);
+end
+
+local prof_select_base = CharacterCreationProfession.onSelectProf;
+function CharacterCreationProfession:onSelectProf(item)
+    prof_select_base(self, item);
+    -- Why in the fresh hell is this called before create is called?
+    if self.requireProfBtn ~= nil then
+        self.requireProfBtn:setEnable(true);
+        self.banProfBtn:setEnable(true);
+    end
 end
