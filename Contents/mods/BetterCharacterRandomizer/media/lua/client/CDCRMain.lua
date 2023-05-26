@@ -15,6 +15,8 @@ local col_r = {a = 0.1, r = 0, g = 1, b = 0};
         ccp_create_base(self);
         self:PrepareRandomizerSettings();
 
+        local buttonHgt = getTextManager():getFontHeight(UIFont.Small) + 3 * 2;
+
         -- Add required positive trait
         local x = self.addTraitBtn:getX() - 100;
         self.requireTraitBtn = ISButton:new(x, (self.listboxTrait:getY() + self.listboxTrait:getHeight()) + self.traitButtonPad, 50, self.traitButtonHgt, "Toggle Require", self, self.OnButtonRequireTrait);
@@ -99,6 +101,20 @@ local col_r = {a = 0.1, r = 0, g = 1, b = 0};
         self.banProfBtn:setAnchorBottom(true);
         self.banProfBtn:setEnable(false);
         self.mainPanel:addChild(self.banProfBtn);
+
+        local textWid = getTextManager():MeasureStringX(UIFont.Small, "BLIND RANDOMIZE");
+        local blindButtonWid = math.max(100, textWid + 8 * 2) + 20
+        local x = self.resetButton:getX() - 10 - blindButtonWid;
+        self.blindButton = ISButton:new(x, self.resetButton:getY(), blindButtonWid, buttonHgt, "BLIND RANDOMIZE", self, self.OnButtonBlindRandomize);
+        self.blindButton.internal = "RESETTRAITS";
+        self.blindButton:initialise();
+        self.blindButton:instantiate();
+        self.blindButton:setAnchorLeft(false);
+        self.blindButton:setAnchorRight(true);
+        self.blindButton:setAnchorTop(false);
+        self.blindButton:setAnchorBottom(true);
+        self.blindButton.borderColor = { r = 1, g = 1, b = 1, a = 0.1 };
+        self.mainPanel:addChild(self.blindButton);
     end
 
     local draw_trait_map_base = CharacterCreationProfession.drawTraitMap;
@@ -173,59 +189,6 @@ local col_r = {a = 0.1, r = 0, g = 1, b = 0};
         self.banTraitBtn:setEnable(false);
         self.requireBadTraitBtn:setEnable(false);
         self.banBadTraitBtn:setEnable(false);
-    end
--- ]
-
--- [ Personal functions 
-    function CharacterCreationProfession:PrepareRandomizerSettings()
-        -- Load settings from CDCharRandomizer
-        local compare_trait_function = function(a, b)
-            return a.item:getType() == b;
-        end
-
-        if CDCharRandomizer.requiredProfession_str ~= nil then
-            local it = self.listboxProf.items;
-            local p = CDCharRandomizer.requiredProfession_str;
-            local i = CDTools:TableContains(it, p, compare_trait_function);
-            if i ~= -1 then
-                self.listboxProf.selected = i;
-                self:onSelectProf(ProfessionFactory.getProfessions():get(i));
-            else
-                print("CDCharRandomizer: Could not find profession with name " .. CDCharRandomizer.requiredProfession_str);
-            end
-        end
-
-        -- for trait_name, _ in pairs(CDCharRandomizer.requiredTraits_hs) do
-        --     local i = CDTools:TableContains(self.listboxTrait.items, trait_name, compare_trait_function);
-        --     if i ~= -1 then
-        --         self.listboxTrait.selected = i;
-        --         self:addTrait(self.listboxTrait, self.listboxRequiredTraits);
-        --     else
-        --         local i = CDTools:TableContains(self.listboxBadTrait.items, trait_name, compare_trait_function);
-        --         if i ~= -1 then
-        --             self.listboxBadTrait.selected = i;
-        --             self:addTrait(self.listboxBadTrait, self.listboxRequiredTraits);
-        --         else
-        --             print("CDCharRandomizer: Could not find trait with name " .. trait_name);
-        --         end
-        --     end
-        -- end
-
-        -- for trait_name, _ in pairs(CDCharRandomizer.bannedTraits_hs) do
-        --     local i = CDTools:TableContains(self.listboxTrait.items, trait_name, compare_trait_function);
-        --     if i ~= -1 then
-        --         self.listboxTrait.selected = i;
-        --         self:addTrait(self.listboxTrait, self.listboxBannedTraits);
-        --     else
-        --         local i = CDTools:TableContains(self.listboxBadTrait.items, trait_name, compare_trait_function);
-        --         if i ~= -1 then
-        --             self.listboxBadTrait.selected = i;
-        --             self:addTrait(self.listboxBadTrait, self.listboxBannedTraits);
-        --         else
-        --             print("CDCharRandomizer: Could not find trait with name " .. trait_name);
-        --         end
-        --     end
-        -- end
     end
 
     function CharacterCreationProfession:randomizeTraits()
@@ -311,6 +274,59 @@ local col_r = {a = 0.1, r = 0, g = 1, b = 0};
         end
 
         self:CDBalancePoints(trait_table_ar);
+    end
+-- ]
+
+-- [ Personal functions 
+    function CharacterCreationProfession:PrepareRandomizerSettings()
+        -- Load settings from CDCharRandomizer
+        local compare_trait_function = function(a, b)
+            return a.item:getType() == b;
+        end
+
+        if CDCharRandomizer.requiredProfession_str ~= nil then
+            local it = self.listboxProf.items;
+            local p = CDCharRandomizer.requiredProfession_str;
+            local i = CDTools:TableContains(it, p, compare_trait_function);
+            if i ~= -1 then
+                self.listboxProf.selected = i;
+                self:onSelectProf(ProfessionFactory.getProfessions():get(i));
+            else
+                print("CDCharRandomizer: Could not find profession with name " .. CDCharRandomizer.requiredProfession_str);
+            end
+        end
+
+        -- for trait_name, _ in pairs(CDCharRandomizer.requiredTraits_hs) do
+        --     local i = CDTools:TableContains(self.listboxTrait.items, trait_name, compare_trait_function);
+        --     if i ~= -1 then
+        --         self.listboxTrait.selected = i;
+        --         self:addTrait(self.listboxTrait, self.listboxRequiredTraits);
+        --     else
+        --         local i = CDTools:TableContains(self.listboxBadTrait.items, trait_name, compare_trait_function);
+        --         if i ~= -1 then
+        --             self.listboxBadTrait.selected = i;
+        --             self:addTrait(self.listboxBadTrait, self.listboxRequiredTraits);
+        --         else
+        --             print("CDCharRandomizer: Could not find trait with name " .. trait_name);
+        --         end
+        --     end
+        -- end
+
+        -- for trait_name, _ in pairs(CDCharRandomizer.bannedTraits_hs) do
+        --     local i = CDTools:TableContains(self.listboxTrait.items, trait_name, compare_trait_function);
+        --     if i ~= -1 then
+        --         self.listboxTrait.selected = i;
+        --         self:addTrait(self.listboxTrait, self.listboxBannedTraits);
+        --     else
+        --         local i = CDTools:TableContains(self.listboxBadTrait.items, trait_name, compare_trait_function);
+        --         if i ~= -1 then
+        --             self.listboxBadTrait.selected = i;
+        --             self:addTrait(self.listboxBadTrait, self.listboxBannedTraits);
+        --         else
+        --             print("CDCharRandomizer: Could not find trait with name " .. trait_name);
+        --         end
+        --     end
+        -- end
     end
 
     function CharacterCreationProfession:CDBalancePoints(trait_table_ar)
@@ -502,5 +518,17 @@ local col_r = {a = 0.1, r = 0, g = 1, b = 0};
         else
             CDCharRandomizer.requiredProfession_str = item;
         end
+    end
+
+    function CharacterCreationProfession:OnButtonBlindRandomize(button, x, y)
+        self:randomizeTraits();
+        -- Next button function, taken from onOptionMouseDown
+
+        if self.infoRichText then
+			self.infoRichText:removeFromUIManager()
+			self.infoRichText = nil
+		end
+		MainScreen.instance.charCreationProfession:setVisible(false);
+		MainScreen.instance.charCreationMain:setVisible(true, joypadData);
     end
 -- ]
