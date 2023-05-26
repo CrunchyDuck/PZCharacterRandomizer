@@ -2,7 +2,6 @@ require "CDTools"
 
 CDCharRandomizer = {};
 
--- TODO: Save banned professions
 CDCharRandomizer.requiredProfession_str = "";  -- return of zombie.characters.professions.ProfessionFactory.Profession.getType()
 CDCharRandomizer.bannedProfessions_hs = {};  -- return of zombie.characters.professions.ProfessionFactory.Profession.getType()
 -- I don't know if Trait.getType() is a unique identifier, but I couldn't find a way to access Trait.traitID. This might be it??

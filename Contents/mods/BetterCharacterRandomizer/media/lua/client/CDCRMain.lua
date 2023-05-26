@@ -3,8 +3,6 @@ require "CDTools"
 require "CDCharRandomizer"
 require "CDCharRandomizerSettings"
 
--- TODO: Ban/Require profession
--- TODO: Turn off buttons when adding/removing trait
 -- TODO: Randomize and move to next page.
 
 local col_b = {a = 0.1, r = 1, g = 0, b = 0};
@@ -230,19 +228,9 @@ local col_r = {a = 0.1, r = 0, g = 1, b = 0};
         -- end
     end
 
-    -- TODO: UI for choosing traits in the character creation menu.
     function CharacterCreationProfession:randomizeTraits()
-        -- Pick the required profession
-        -- (try to) Pick the required traits.
-        --- Report trait conflicts.
-        -- Pick the required categories
-        -- Add new traits until a threshold is reached:
-        --- no more traits
-        --- max number of traits (positive or negative)
-        --- max number of points (absolute)
         self:resetBuild();
 
-        -- TODO: Required profession.
         if CDCharRandomizer.requiredProfession_str == "" then
             local prof_list = CDTools:ShallowCopy(self.listboxProf.items);
             CDTools:FisherYatesShuffle(prof_list);
@@ -405,7 +393,6 @@ local col_r = {a = 0.1, r = 0, g = 1, b = 0};
         if trait.item:getCost() < 0 then
             local i = CDTools:TableContains(self.listboxBadTrait.items, trait);
             if i == -1 then
-                -- TODO: Figure out exception/debugging for this.
                 return
             end
             self.listboxBadTrait.selected = i;
@@ -414,7 +401,6 @@ local col_r = {a = 0.1, r = 0, g = 1, b = 0};
         elseif trait.item:getCost() > 0 then
             local i = CDTools:TableContains(self.listboxTrait.items, trait);
             if i == -1 then
-                -- TODO: Figure out exception/debugging for this.
                 return
             end
             self.listboxTrait.selected = i;
